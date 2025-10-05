@@ -1,0 +1,19 @@
+@dotnet_backend_HostAddress = http://localhost:7000
+
+# Test API hoạt động
+GET {{dotnet_backend_HostAddress}}/api/test
+Accept: application/json
+
+###
+
+# Kiểm tra kết nối MySQL
+GET {{dotnet_backend_HostAddress}}/api/test/mysql
+Accept: application/json
+
+###
+
+# Lấy thông tin chi tiết database
+GET {{dotnet_backend_HostAddress}}/api/test/mysql/info
+Accept: application/json
+
+###
