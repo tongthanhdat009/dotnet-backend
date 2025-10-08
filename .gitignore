@@ -1,3 +1,9 @@
 /dotnet_backend/bin
 /dotnet_backend/obj
 /dotnet_backend
+*.dll
+*.exe
+*.pdb
+/dotnet_backend
+/dotnet_backend/obj
+*.json
