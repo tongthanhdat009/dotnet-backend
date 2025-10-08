@@ -13,9 +13,11 @@ public partial class User
 
     public string? FullName { get; set; }
 
-    public string? Role { get; set; }
+    public int? Role { get; set; }
 
     public DateTime? CreatedAt { get; set; }
 
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
+
+    public virtual Role? RoleNavigation { get; set; }
 }

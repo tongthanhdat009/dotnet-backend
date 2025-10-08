@@ -254,3 +254,4 @@ G:\github\dotnet-backend\dotnet_backend\bin\Debug\net9.0\ru\Microsoft.CodeAnalys
 G:\github\dotnet-backend\dotnet_backend\bin\Debug\net9.0\tr\Microsoft.CodeAnalysis.Scripting.resources.dll
 G:\github\dotnet-backend\dotnet_backend\bin\Debug\net9.0\zh-Hans\Microsoft.CodeAnalysis.Scripting.resources.dll
 G:\github\dotnet-backend\dotnet_backend\bin\Debug\net9.0\zh-Hant\Microsoft.CodeAnalysis.Scripting.resources.dll
+G:\github\dotnet-backend\dotnet_backend\obj\Debug\net9.0\dotnet-backend.sourcelink.json

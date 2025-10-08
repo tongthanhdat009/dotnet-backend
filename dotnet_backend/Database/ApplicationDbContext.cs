@@ -29,17 +29,17 @@ public partial class ApplicationDbContext : DbContext
 
     public virtual DbSet<Payment> Payments { get; set; }
 
+    public virtual DbSet<Permission> Permissions { get; set; }
+
     public virtual DbSet<Product> Products { get; set; }
 
     public virtual DbSet<Promotion> Promotions { get; set; }
 
+    public virtual DbSet<Role> Roles { get; set; }
+
     public virtual DbSet<Supplier> Suppliers { get; set; }
 
     public virtual DbSet<User> Users { get; set; }
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-#warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
-        => optionsBuilder.UseMySql("server=localhost;database=store_management;user=root;password=Dat12345@", Microsoft.EntityFrameworkCore.ServerVersion.Parse("8.0.43-mysql"));
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -214,6 +214,26 @@ public partial class ApplicationDbContext : DbContext
                 .HasConstraintName("fk_payments_orders");
         });
 
+        modelBuilder.Entity<Permission>(entity =>
+        {
+            entity.HasKey(e => e.PermissionId).HasName("PRIMARY");
+
+            entity.ToTable("permissions");
+
+            entity.HasIndex(e => e.ActionKey, "action_key").IsUnique();
+
+            entity.Property(e => e.PermissionId).HasColumnName("permission_id");
+            entity.Property(e => e.ActionKey)
+                .HasMaxLength(50)
+                .HasColumnName("action_key");
+            entity.Property(e => e.Description)
+                .HasColumnType("text")
+                .HasColumnName("description");
+            entity.Property(e => e.PermissionName)
+                .HasMaxLength(100)
+                .HasColumnName("permission_name");
+        });
+
         modelBuilder.Entity<Product>(entity =>
         {
             entity.HasKey(e => e.ProductId).HasName("PRIMARY");
@@ -297,6 +317,43 @@ public partial class ApplicationDbContext : DbContext
                 .HasColumnName("used_count");
         });
 
+        modelBuilder.Entity<Role>(entity =>
+        {
+            entity.HasKey(e => e.RoleId).HasName("PRIMARY");
+
+            entity.ToTable("roles");
+
+            entity.HasIndex(e => e.RoleName, "role_name").IsUnique();
+
+            entity.Property(e => e.RoleId).HasColumnName("role_id");
+            entity.Property(e => e.Description)
+                .HasColumnType("text")
+                .HasColumnName("description");
+            entity.Property(e => e.RoleName)
+                .HasMaxLength(50)
+                .HasColumnName("role_name");
+
+            entity.HasMany(d => d.Permissions).WithMany(p => p.Roles)
+                .UsingEntity<Dictionary<string, object>>(
+                    "RolePermission",
+                    r => r.HasOne<Permission>().WithMany()
+                        .HasForeignKey("PermissionId")
+                        .HasConstraintName("role_permissions_ibfk_2"),
+                    l => l.HasOne<Role>().WithMany()
+                        .HasForeignKey("RoleId")
+                        .HasConstraintName("role_permissions_ibfk_1"),
+                    j =>
+                    {
+                        j.HasKey("RoleId", "PermissionId")
+                            .HasName("PRIMARY")
+                            .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
+                        j.ToTable("role_permissions");
+                        j.HasIndex(new[] { "PermissionId" }, "permission_id");
+                        j.IndexerProperty<int>("RoleId").HasColumnName("role_id");
+                        j.IndexerProperty<int>("PermissionId").HasColumnName("permission_id");
+                    });
+        });
+
         modelBuilder.Entity<Supplier>(entity =>
         {
             entity.HasKey(e => e.SupplierId).HasName("PRIMARY");
@@ -324,6 +381,8 @@ public partial class ApplicationDbContext : DbContext
 
             entity.ToTable("users");
 
+            entity.HasIndex(e => e.Role, "role");
+
             entity.HasIndex(e => e.Username, "username").IsUnique();
 
             entity.Property(e => e.UserId).HasColumnName("user_id");
@@ -337,13 +396,14 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.Password)
                 .HasMaxLength(255)
                 .HasColumnName("password");
-            entity.Property(e => e.Role)
-                .HasDefaultValueSql("'staff'")
-                .HasColumnType("enum('admin','staff')")
-                .HasColumnName("role");
+            entity.Property(e => e.Role).HasColumnName("role");
             entity.Property(e => e.Username)
                 .HasMaxLength(50)
                 .HasColumnName("username");
+
+            entity.HasOne(d => d.RoleNavigation).WithMany(p => p.Users)
+                .HasForeignKey(d => d.Role)
+                .HasConstraintName("users_ibfk_1");
         });
 
         OnModelCreatingPartial(modelBuilder);
