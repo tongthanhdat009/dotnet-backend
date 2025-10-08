@@ -1,9 +1,39 @@
-/dotnet_backend/bin
-/dotnet_backend/obj
-/dotnet_backend
+## .NET Build Output
+**/bin/
+**/obj/
+**/Debug/
+**/Release/
+
+## .NET Files
 *.dll
 *.exe
 *.pdb
-/dotnet_backend
-/dotnet_backend/obj
-*.json
+*.cache
+
+## User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+## VS Code
+.vscode/
+*.code-workspace
+
+## Build Results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+
+## Keep appsettings
+!appsettings.json
+!appsettings.Development.json
