@@ -3,24 +3,40 @@ using dotnet_backend.Database;
 using dotnet_backend.Services;
 using dotnet_backend.Services.Interface;
 
-// Program.cs
 var builder = WebApplication.CreateBuilder(args);
 
 // 1. Lấy chuỗi kết nối từ appsettings.json
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection"); // Đảm bảo tên "DefaultConnection" khớp với trong file appsettings.json
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
 // 2. Đăng ký DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
-// 3. Thêm dịch vụ vào container (DI)
-builder.Services.AddControllers();
-builder.Services.AddScoped<IProductService, ProductService>(); // Quan trọng!
+// 3. Đăng ký dịch vụ
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = null;
+    });
+
+builder.Services.AddScoped<IProductService, ProductService>();
+
+// ✅ 4. Bật CORS cho phép Vue (localhost:5173)
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowVueApp",
+        policy => policy
+            .WithOrigins("http://localhost:5173") // địa chỉ Vue chạy
+            .AllowAnyHeader()
+            .AllowAnyMethod());
+});
 
 var app = builder.Build();
 
-app.UseAuthorization();
+// ✅ 5. Kích hoạt CORS
+app.UseCors("AllowVueApp");
 
+app.UseAuthorization();
 app.MapControllers();
 
 app.Run();

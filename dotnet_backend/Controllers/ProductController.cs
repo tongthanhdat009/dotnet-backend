@@ -1,4 +1,3 @@
-// Controllers/ProductsController.cs
 using Microsoft.AspNetCore.Mvc;
 using dotnet_backend.Services.Interface;
 
@@ -10,7 +9,6 @@ public class ProductsController : ControllerBase
 {
     private readonly IProductService _productService;
 
-    // Inject service vào controller
     public ProductsController(IProductService productService)
     {
         _productService = productService;
@@ -20,7 +18,14 @@ public class ProductsController : ControllerBase
     public async Task<IActionResult> GetProducts()
     {
         var products = await _productService.GetAllProductsAsync();
-        return Ok(products); // Trả về status 200 OK cùng với danh sách sản phẩm
+        return Ok(products);
     }
 
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetProduct(int id)
+    {
+        var product = await _productService.GetProductByIdAsync(id);
+        if (product == null) return NotFound();
+        return Ok(product);
+    }
 }

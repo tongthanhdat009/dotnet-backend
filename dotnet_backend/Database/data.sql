@@ -18,7 +18,7 @@
 --
 -- Dumping data for table `categories`
 --
-
+USE store_management;
 LOCK TABLES `categories` WRITE;
 /*!40000 ALTER TABLE `categories` DISABLE KEYS */;
 INSERT INTO `categories` VALUES (1,'Đồ uống'),(2,'Bánh kẹo'),(3,'Gia vị'),(4,'Đồ gia dụng'),(5,'Mỹ phẩm');
