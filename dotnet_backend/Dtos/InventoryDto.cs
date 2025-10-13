@@ -6,5 +6,5 @@ public class InventoryDto
     public int ProductId { get; set; }
     public int? Quantity { get; set; }
     public DateTime? UpdatedAt { get; set; }
-    public virtual ProductDto Product { get; set; } = null!;
+    public virtual ProductDto? Product { get; set; } = null!;
 }
