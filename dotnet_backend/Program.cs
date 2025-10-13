@@ -20,6 +20,9 @@ builder.Services.AddControllers()
     });
 
 builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<ICategoryService, CategoryService>();
+builder.Services.AddScoped<ISupplierService, SupplierService>();
+
 
 // ✅ 4. Bật CORS cho phép Vue (localhost:5173)
 builder.Services.AddCors(options =>
