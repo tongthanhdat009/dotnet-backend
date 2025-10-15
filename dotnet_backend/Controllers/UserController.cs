@@ -71,8 +71,8 @@ namespace dotnet_backend.Controllers
         public async Task<IActionResult> DeleteUser(int id)
         {
             var deleted = await _userService.DeleteUserAsync(id);
-            if (!deleted) return NotFound();
-            return NoContent();
+            if (!deleted) return NotFound(new { message = "Không tìm thấy sản phẩm" });
+            return Ok(new { message = "Xóa tài khoản thành công" });
         }
     }
 }
