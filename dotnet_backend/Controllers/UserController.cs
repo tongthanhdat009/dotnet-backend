@@ -17,7 +17,6 @@ namespace dotnet_backend.Controllers
 
         // GET: api/users
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<UserDto>), 200)]
         public async Task<ActionResult<IEnumerable<UserDto>>> GetUsers()
         {
             var users = await _userService.GetAllUsersAsync();
@@ -26,8 +25,6 @@ namespace dotnet_backend.Controllers
 
         // GET: api/users/5
         [HttpGet("{id:int}")]
-        [ProducesResponseType(typeof(UserDto), 200)]
-        [ProducesResponseType(404)]
         public async Task<ActionResult<UserDto>> GetUser(int id)
         {
             var user = await _userService.GetUserByIdAsync(id);
@@ -37,41 +34,62 @@ namespace dotnet_backend.Controllers
 
         // POST: api/users
         [HttpPost]
-        [ProducesResponseType(typeof(UserDto), 201)]
-        [ProducesResponseType(400)]
         public async Task<ActionResult<UserDto>> CreateUser([FromBody] UserDto userDto)
         {
-            if (userDto is null) return BadRequest();
-            var newUser = await _userService.CreateUserAsync(userDto);
-            return CreatedAtAction(nameof(GetUser), new { id = newUser.UserId }, newUser);
+            // fixed validation
+            UserDto createdUser = null;
+            try
+            {
+                createdUser = await _userService.CreateUserAsync(userDto);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+
+            return CreatedAtAction(nameof(GetUser), new { id = createdUser.UserId }, createdUser);
+
         }
 
+
         // PUT: api/users/5
-        [HttpPut("{id:int}")]
-        [ProducesResponseType(typeof(UserDto), 200)]
-        [ProducesResponseType(400)]
-        [ProducesResponseType(404)]
+        [HttpPut("{id}")]
+
         public async Task<ActionResult<UserDto>> UpdateUser(int id, [FromBody] UserDto userDto)
         {
-            if (userDto is null) return BadRequest();
+            if (id != userDto.UserId)
+            {
+                return BadRequest(new { message = "ID trên endpoint khác với body" });
+            }
 
-            // Tuỳ chọn: đảm bảo id route khớp với dto để tránh update nhầm
-            if (userDto.UserId != 0 && userDto.UserId != id)
-                return BadRequest("Route id != dto.UserId");
+            UserDto updatedUser = null;
+            try
+            {
+                updatedUser = await _userService.UpdateUserAsync(id, userDto);
+                if (updatedUser is null) return NotFound();
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
 
-            var updatedUser = await _userService.UpdateUserAsync(id, userDto);
-            if (updatedUser is null) return NotFound();
             return Ok(updatedUser);
         }
 
         // DELETE: api/users/5
-        [HttpDelete("{id:int}")]
-        [ProducesResponseType(204)]
-        [ProducesResponseType(404)]
+        [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
             var deleted = await _userService.DeleteUserAsync(id);
-            if (!deleted) return NotFound(new { message = "Không tìm thấy sản phẩm" });
+            if (!deleted) return NotFound(new { message = "Không thể xóa tài khoản" });
             return Ok(new { message = "Xóa tài khoản thành công" });
         }
     }

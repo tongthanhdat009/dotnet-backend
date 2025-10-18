@@ -4,6 +4,7 @@ using dotnet_backend.Database;
 using dotnet_backend.Services.Interface;
 using dotnet_backend.Models;
 using dotnet_backend.Dtos;
+using System.Data;
 
 namespace dotnet_backend.Services;
 
@@ -53,6 +54,34 @@ public class UserService : IUserService
     // Create a new user
     public async Task<UserDto> CreateUserAsync(UserDto userDto)
     {
+        // valaidete input (you can add more validation as needed)
+        var username = userDto.Username?.Trim();
+        if (string.IsNullOrEmpty(username))
+        {
+            throw new ArgumentException("Username là bắt buộc");
+        }
+        if (string.IsNullOrEmpty(userDto.Password))
+        {
+            throw new ArgumentException("Password là bắt buộc");
+        }
+        if (string.IsNullOrEmpty(userDto.FullName))
+        {
+            throw new ArgumentException("FullName là bắt buộc");
+        }
+        if (userDto.Role == null)
+        {
+            throw new ArgumentException("Role là bắt buộc");
+        }
+        if (userDto.Role !=1 && userDto.Role != 2)
+        {
+            throw new ArgumentException("Role không hợp lệ");
+        }
+
+        var existed = await _context.Users
+        .AnyAsync(u => u.Username.ToLower() == username.ToLower());
+        if (existed)
+            throw new ArgumentException("Tên đăng nhập đã được sử dụng");
+
         var user = new User
         {
             Username = userDto.Username,
@@ -71,6 +100,29 @@ public class UserService : IUserService
     // Update an existing user
     public async Task<UserDto?> UpdateUserAsync(int id, UserDto userDto)
     {
+
+        var username = userDto.Username?.Trim();
+        var fullname = userDto.FullName?.Trim();
+        if (string.IsNullOrEmpty(username))
+        {
+            throw new ArgumentException("Username là bắt buộc");
+        }
+        if (string.IsNullOrEmpty(userDto.Password))
+        {
+            throw new ArgumentException("Password là bắt buộc");
+        }
+        if (string.IsNullOrEmpty(fullname))
+        {
+            throw new ArgumentException("FullName là bắt buộc");
+        }
+        if (userDto.Role == null)
+        {
+            throw new ArgumentException("Role là bắt buộc");
+        }
+        if (userDto.Role != 1 && userDto.Role != 2)
+        {
+            throw new ArgumentException("Role không hợp lệ");
+        }
         var userToUpdate = await _context.Users.FindAsync(id);
         if (userToUpdate == null)
         {
@@ -96,7 +148,7 @@ public class UserService : IUserService
         };
 
     }
-    
+
     // Delete a user
     public async Task<bool> DeleteUserAsync(int id)
     {
