@@ -22,6 +22,13 @@ namespace dotnet_backend.Controllers
             return Ok(categories);
         }
 
+        [HttpGet("total")]
+        public async Task<IActionResult> GetTotalCategories()
+        {
+            var totalCategories = await _categoryService.GetTotalCategoriesAsync();
+            return Ok(totalCategories);
+        }
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetCategory(int id)
         {

@@ -29,6 +29,11 @@ namespace dotnet_backend.Services
                 .ToListAsync();
         }
 
+        public async Task<int> GetTotalCategoriesAsync()
+        {
+            return await _context.Categories.CountAsync();
+        }
+
         public async Task<CategoryDto?> GetCategoryByIdAsync(int id)
         {
             var category = await _context.Categories.FindAsync(id);

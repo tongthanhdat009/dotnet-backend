@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using dotnet_backend.Services.Interface;
 using dotnet_backend.Dtos;
+using Internal;
 
 namespace dotnet_backend.Controllers;
 
@@ -22,6 +23,20 @@ public class ProductsController : ControllerBase
         return Ok(products);
     }
 
+    [HttpGet("total")]
+    public async Task<IActionResult> GetTotalProducts()
+    {
+        var totalProducts = await _productService.GetTotalProductsAsync();
+        return Ok(totalProducts);
+    }
+
+    [HttpGet("top-products")]
+    public async Task<IActionResult> GetTopProducts(int top = 3)
+    {
+        var topProducts = await _productService.GetTopProductsByOrderCountAsync(top);
+        return Ok(topProducts);
+    }
+
     [HttpGet("{id}")]
     public async Task<IActionResult> GetProduct(int id)
     {
@@ -29,6 +44,8 @@ public class ProductsController : ControllerBase
         if (product == null) return NotFound(new { message = "Không tìm thấy sản phẩm" });
         return Ok(product);
     }
+
+
 
     [HttpPost]
     public async Task<IActionResult> CreateProduct([FromBody] ProductDto productDto)

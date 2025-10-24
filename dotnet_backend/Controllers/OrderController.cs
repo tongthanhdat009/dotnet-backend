@@ -25,6 +25,34 @@ public class OrderController : ControllerBase
         return Ok(orders);
     }
 
+    [HttpGet("total")]
+    public async Task<IActionResult> GetTotalOrders()
+    {
+        var totalOrders = await _orderService.GetTotalOrdersAsync();
+        return Ok(totalOrders);
+    }
+
+    [HttpGet("peak-time")]
+    public async Task<IActionResult> GetPeakTimeStats()
+    {
+        var result = await _orderService.GetPeakTimeStatsAsync();
+        return Ok(result);
+    }
+
+    [HttpGet("orders-by-year/{year}")]
+    public async Task<IActionResult> GetOrdersByYear(int year)
+    {
+        var ordersByYear = await _orderService.GetOrdersByYearAsync(year);
+        return Ok(ordersByYear);
+    }
+
+    [HttpGet("sales-by-year/{year}")]
+    public async Task<IActionResult> GetSalesByYear(int year)
+    {
+        var salesByYear = await _orderService.GetSalesByYearAsync(year);
+        return Ok(salesByYear);
+    }
+
     [HttpGet("{id}")]
     public async Task<IActionResult> GetOrder(int id)
     {
@@ -105,5 +133,5 @@ public class OrderController : ControllerBase
             });
         }
     }
-    
+
 }

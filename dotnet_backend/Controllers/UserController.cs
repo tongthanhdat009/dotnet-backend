@@ -23,6 +23,13 @@ namespace dotnet_backend.Controllers
             return Ok(users);
         }
 
+        [HttpGet("total")]
+        public async Task<IActionResult> GetTotalUsers()
+        {
+            var totalUsers = await _userService.GetTotalUsersAsync();
+            return Ok(totalUsers);
+        }
+
         // GET: api/users/5
         [HttpGet("{id:int}")]
         public async Task<ActionResult<UserDto>> GetUser(int id)

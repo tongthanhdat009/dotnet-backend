@@ -21,6 +21,13 @@ public class CustomerController : ControllerBase
         return Ok(customers);
     }
 
+    [HttpGet("top-buyers")]
+    public async Task<IActionResult> GetTopBuyers(int top = 3)
+    {
+        var topCustomers = await _customerService.GetTopCustomersByOrderCountAsync(top);
+        return Ok(topCustomers);
+    }
+
     [HttpGet("{id}")]
     public async Task<IActionResult> GetCustomer(int id)
     {

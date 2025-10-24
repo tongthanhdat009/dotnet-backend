@@ -35,6 +35,34 @@ public class ProductService : IProductService
 
     }
 
+    public async Task<IEnumerable<TopProductDto>> GetTopProductsByOrderCountAsync(int topCount = 3)
+    {
+        var result = await _context.OrderItems
+            .Join(
+                _context.Products,
+                oi => oi.ProductId,        
+                p => p.ProductId,          
+                (oi, p) => new { p.ProductName, oi.ProductId }
+            )
+            .GroupBy(x => x.ProductName)
+            .Select(g => new TopProductDto
+            {
+                ProductName = g.Key,
+                TotalOrders = g.Count()
+            })
+            .OrderByDescending(x => x.TotalOrders)
+            .Take(topCount)
+            .ToListAsync();
+
+        return result;
+    }
+
+    public async Task<int> GetTotalProductsAsync()
+    {
+        return await _context.Products.CountAsync();
+    }
+
+
     public async Task<ProductDto> GetProductByIdAsync(int id)
     {
         var productDto = await _context.Products
