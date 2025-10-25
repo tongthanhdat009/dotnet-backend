@@ -25,6 +25,13 @@ public class OrderController : ControllerBase
         return Ok(orders);
     }
 
+    [HttpGet("customer/{customerId}")]
+    public async Task<IActionResult> GetOrdersByCustomer(int customerId)
+    {
+        var orders = await _orderService.GetOrdersByCustomerIdAsync(customerId);
+        return Ok(orders);
+    }
+
     [HttpGet("{id}")]
     public async Task<IActionResult> GetOrder(int id)
     {

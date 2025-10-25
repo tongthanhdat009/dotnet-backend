@@ -65,6 +65,63 @@ public class OrderService : IOrderService
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<OrderDto>> GetOrdersByUserIdAsync(int userId)
+    {
+        // Deprecated: replaced by GetOrdersByCustomerIdAsync
+        return Enumerable.Empty<OrderDto>();
+    }
+
+    public async Task<IEnumerable<OrderDto>> GetOrdersByCustomerIdAsync(int customerId)
+    {
+        // Return summary order info for a customer (no OrderItems/detail)
+        return await _context.Orders
+            .Where(o => o.CustomerId == customerId)
+            .Include(o => o.Customer)
+            .Include(o => o.Payments)
+            .Include(o => o.User)
+            .Select(o => new OrderDto
+            {
+                OrderId = o.OrderId,
+                CustomerId = o.CustomerId,
+                UserId = o.UserId,
+                PromoId = o.PromoId,
+                OrderDate = o.OrderDate,
+                TotalAmount = o.TotalAmount,
+                DiscountAmount = o.DiscountAmount,
+                Status = o.Status,
+
+                Customer = o.Customer == null ? null : new CustomerDto
+                {
+                    CustomerId = o.Customer.CustomerId,
+                    Name = o.Customer.Name,
+                    Email = o.Customer.Email,
+                    Phone = o.Customer.Phone,
+                    Address = o.Customer.Address,
+                    CreatedAt = o.Customer.CreatedAt
+                },
+
+                Payments = o.Payments.Select(p => new PaymentDto
+                {
+                    PaymentId = p.PaymentId,
+                    OrderId = p.OrderId,
+                    Amount = p.Amount,
+                    PaymentMethod = p.PaymentMethod ?? "",
+                    PaymentDate = p.PaymentDate ?? DateTime.MinValue
+                }).ToList(),
+
+                User = o.User == null ? null : new UserDto
+                {
+                    UserId = o.User.UserId,
+                    Username = o.User.Username,
+                    Password = "",
+                    FullName = o.User.FullName,
+                    Role = o.User.Role,
+                    CreatedAt = o.User.CreatedAt
+                }
+            })
+            .ToListAsync();
+    }
+
 
     public async Task<OrderDto> GetOrderByIdAsync(int id)
     {

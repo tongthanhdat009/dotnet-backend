@@ -35,7 +35,8 @@ public class CustomerController : ControllerBase
         try
         {
             CustomerDto createdCustomer = await _customerService.CreateCustomerAsync(customerDto);
-            return CreatedAtAction(nameof(GetCustomer), new { id = createdCustomer.CustomerId }, createdCustomer);
+            // Return created resource along with a success message
+            return CreatedAtAction(nameof(GetCustomer), new { id = createdCustomer.CustomerId }, new { message = "Success", data = createdCustomer });
         }
         catch (ArgumentException ex) // Bắt lỗi nghiệp vụ từ Service
         {
@@ -49,7 +50,7 @@ public class CustomerController : ControllerBase
         try
         {
             CustomerDto updatedCustomer = await _customerService.UpdateCustomerAsync(id, customerDto);
-            return Ok(updatedCustomer);
+            return Ok(new { message = "Success", data = updatedCustomer });
         }
         catch (ArgumentException ex) // Bắt lỗi nghiệp vụ từ Service
         {
@@ -60,8 +61,18 @@ public class CustomerController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteCustomer(int id)
     {
-        bool result = await _customerService.DeleteCustomerAsync(id);
-        if (!result) return NotFound(new { message = "Không tìm thấy khách hàng" });
-        return NoContent();
+        try
+        {
+            bool result = await _customerService.DeleteCustomerAsync(id);
+            return NoContent();
+        }
+        catch (ArgumentException ex)
+        {
+            // Map not-found vs other business errors
+            if (ex.Message == "Không tìm thấy khách hàng")
+                return NotFound(new { message = ex.Message });
+
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }

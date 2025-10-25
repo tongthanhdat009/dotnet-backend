@@ -6,6 +6,7 @@ public interface IOrderService
 {
     Task<IEnumerable<OrderDto>> GetAllOrdersAsync();
     Task<OrderDto> GetOrderByIdAsync(int id);
+    Task<IEnumerable<OrderDto>> GetOrdersByCustomerIdAsync(int customerId);
     Task<bool> CancelOrderAsync(int orderId);
     Task<OrderDto> CreateOrderAsync(OrderDto orderDto);
 }
