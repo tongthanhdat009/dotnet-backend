@@ -16,9 +16,30 @@ public class OrderService : IOrderService
     {
         _context = context;
     }
+    public async Task<IEnumerable<PromotionDto>> GetAllPromosAsync()
+    {
+        return await _context.Promotions
+            .Select(p => new PromotionDto
+            {
+                PromoId = p.PromoId,
+                PromoCode = p.PromoCode,
+                Description = p.Description,
+                DiscountType = p.DiscountType,
+                DiscountValue = p.DiscountValue,
+                StartDate = p.StartDate,
+                EndDate = p.EndDate,
+                MinOrderAmount = p.MinOrderAmount,
+                UsageLimit = p.UsageLimit,
+                UsedCount = p.UsedCount,
+                Status = p.Status,
+            })
+            .ToListAsync();
+    }
     public async Task<IEnumerable<OrderDto>> GetAllOrdersAsync()
     {
         return await _context.Orders
+            // sort by OrderDate descending (newest first)
+            .OrderByDescending(o => o.OrderDate)
             .Include(o => o.Customer)
             .Include(o => o.Payments)
             .Include(o => o.User)
@@ -256,13 +277,28 @@ public class OrderService : IOrderService
 
     public async Task<OrderDto> CreateOrderAsync(OrderDto orderDto)
     {
+        // Require customerId provided by frontend. Accept 0 or any integer, but ensure the customer exists.
+        if (orderDto.CustomerId == null)
+        {
+            throw new ArgumentException("customerId là bắt buộc.");
+        }
+
+        var customer = await _context.Customers.FindAsync(orderDto.CustomerId.Value);
+        if (customer == null)
+        {
+            throw new ArgumentException("customerId không tồn tại trong hệ thống.");
+        }
+        if (orderDto.OrderItems.Count == 0)
+        {
+            throw new ArgumentException("Đơn hàng phải có ít nhất một món.");
+        }
         orderDto.TotalAmount = 0;
         foreach (var itemDto in orderDto.OrderItems)
         {
             // ... (Logic kiểm tra giá và tạo OrderItem không đổi) ...
             var product = await _context.Products.FindAsync(itemDto.ProductId);
-            if (product == null) throw new KeyNotFoundException($"Sản phẩm với ID {itemDto.ProductId} không tồn tại.");
-            if (product.Price != itemDto.Price) throw new InvalidOperationException($"Giá của sản phẩm '{product.ProductName}' không chính xác.");
+            if (product == null) throw new ArgumentException($"Sản phẩm với ID {itemDto.ProductId} không tồn tại.");
+            if (product.Price != itemDto.Price) throw new ArgumentException($"Giá của sản phẩm '{product.ProductName}' không chính xác.");
             itemDto.Subtotal = itemDto.Quantity * product.Price ?? 0;
             orderDto.TotalAmount += itemDto.Subtotal;
         }
@@ -275,16 +311,16 @@ public class OrderService : IOrderService
         {
             var promo = await _context.Promotions.FindAsync(orderDto.PromoId);
             if (promo == null)
-                throw new Exception("Không tìm thấy khuyến mãi.");
+                throw new ArgumentException("Không tìm thấy khuyến mãi.");
 
             if (promo.Status != "active")
-                throw new Exception("Khuyến mãi không còn hiệu lực.");
+                throw new ArgumentException("Khuyến mãi không còn hiệu lực.");
 
             if (promo.UsedCount >= promo.UsageLimit)
-                throw new Exception("Khuyến mãi đã đạt giới hạn sử dụng.");
+                throw new ArgumentException("Khuyến mãi đã đạt giới hạn sử dụng.");
 
             if (orderDto.TotalAmount < promo.MinOrderAmount)
-                throw new Exception("Tổng đơn hàng không đạt yêu cầu để áp dụng khuyến mãi.");
+                throw new ArgumentException("Tổng đơn hàng không đạt yêu cầu để áp dụng khuyến mãi.");
 
             if (promo.DiscountType == "percentage")
             {
@@ -296,7 +332,7 @@ public class OrderService : IOrderService
             }
             else
             {
-                throw new Exception("Loại khuyến mãi không hợp lệ.");
+                throw new ArgumentException("Loại khuyến mãi không hợp lệ.");
             }
             promo.UsedCount++;
             _context.Promotions.Update(promo);

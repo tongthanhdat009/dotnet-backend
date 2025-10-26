@@ -25,6 +25,13 @@ public class OrderController : ControllerBase
         return Ok(orders);
     }
 
+    [HttpGet("promotions")]
+    public async Task<IActionResult> GetPromotions()
+    {
+        var promos = await _orderService.GetAllPromosAsync();
+        return Ok(promos);
+    }
+
     [HttpGet("customer/{customerId}")]
     public async Task<IActionResult> GetOrdersByCustomer(int customerId)
     {
@@ -65,8 +72,7 @@ public class OrderController : ControllerBase
             // Trả về lỗi chi tiết (debug mode)
             return StatusCode(500, new
             {
-                message = "Đã xảy ra lỗi khi hủy đơn hàng.",
-                error = ex.Message,
+                message = ex.Message,
             });
         }
     }
@@ -76,24 +82,14 @@ public class OrderController : ControllerBase
     {
         try
         {
-            if (orderDto.CustomerId == null)
-            {
-                if (orderDto.Customer == null)
-                {
-                    return BadRequest(new
-                    {
-                        message = "Thông tin khách hàng không được để trống."
-                    });
-                }
-                var customerDto = await _customerService.CreateCustomerAsync(orderDto.Customer);
-                orderDto.CustomerId = customerDto.CustomerId;
-            }
-
             OrderDto order = await _orderService.CreateOrderAsync(orderDto);
-            foreach (var paymentDto in orderDto.Payments)
+            if (orderDto.Payments != null)
             {
-                paymentDto.OrderId = order.OrderId;
-                await _paymentService.CreatePayment(paymentDto);
+                foreach (var paymentDto in orderDto.Payments)
+                {
+                    paymentDto.OrderId = order.OrderId;
+                    await _paymentService.CreatePayment(paymentDto);
+                }
             }
 
             var result = await _orderService.GetOrderByIdAsync(order.OrderId);
@@ -101,6 +97,13 @@ public class OrderController : ControllerBase
             {
                 message = "Đơn hàng đã được tạo thành công.",
                 Order = result
+            });
+        }
+        catch (ArgumentException aex)
+        {
+            return BadRequest(new
+            {
+                message = aex.Message
             });
         }
         catch (Exception ex)

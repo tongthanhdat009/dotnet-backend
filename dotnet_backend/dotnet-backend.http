@@ -17,3 +17,43 @@ GET {{dotnet_backend_HostAddress}}/api/test/mysql/info
 Accept: application/json
 
 ###
+
+# Lấy danh sách khuyến mãi
+GET {{dotnet_backend_HostAddress}}/api/Order/promotions
+Accept: application/json
+
+###
+
+### Create order (example payload - customerId required)
+POST {{dotnet_backend_HostAddress}}/api/Order
+Content-Type: application/json
+
+{
+	"customerId": 0,
+	"userId": 3,
+	"promoId": null,
+	"totalAmount": 625008,
+	"discountAmount": 0,
+	"orderItems": [
+		{
+			"productId": 3,
+			"quantity": 1,
+			"price": 415725,
+			"subtotal": 415725
+		},
+		{
+			"productId": 6,
+			"quantity": 1,
+			"price": 209283,
+			"subtotal": 209283
+		}
+	],
+	"payments": [
+		{
+			"amount": 625008,
+			"paymentMethod": "cash"
+		}
+	]
+}
+
+###

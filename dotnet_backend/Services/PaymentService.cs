@@ -14,10 +14,22 @@ public class PaymentService : IPaymentService
     }
     public async Task<PaymentDto> CreatePayment(PaymentDto paymentDto)
     {
+        // Basic validation moved to service
+        if (paymentDto == null)
+            throw new ArgumentException("Dữ liệu payment không hợp lệ.");
+
+        var allowedMethods = new[] { "cash", "card", "bank_transfer", "e-wallet" };
+
+        if (paymentDto.Amount <= 0)
+            throw new ArgumentException("Số tiền thanh toán phải lớn hơn 0.");
+
+        if (string.IsNullOrWhiteSpace(paymentDto.PaymentMethod) || !allowedMethods.Contains(paymentDto.PaymentMethod))
+            throw new ArgumentException($"Phương thức thanh toán không hợp lệ: {paymentDto.PaymentMethod}");
+
         var order = await _context.Orders.FindAsync(paymentDto.OrderId);
         if (order == null)
         {
-            throw new Exception("Đơn hàng không tồn tại");
+            throw new ArgumentException("Đơn hàng không tồn tại");
         }
         var payments = await _context.Payments
             .Where(p => p.OrderId == paymentDto.OrderId)
@@ -25,14 +37,14 @@ public class PaymentService : IPaymentService
         var totalPaid = payments.Sum(p => p.Amount);
         if (totalPaid + paymentDto.Amount > order.TotalAmount)
         {
-            throw new Exception("Số tiền thanh toán vượt quá tổng số tiền của đơn hàng");
+            throw new ArgumentException("Số tiền thanh toán vượt quá tổng số tiền của đơn hàng");
         }
         var payment = new Payment
         {
             OrderId = paymentDto.OrderId,
             Amount = paymentDto.Amount,
             PaymentMethod = paymentDto.PaymentMethod,
-            PaymentDate = paymentDto.PaymentDate
+            PaymentDate = DateTime.UtcNow
         };
         _context.Payments.Add(payment);
         if (paymentDto.Amount + totalPaid == order.TotalAmount)
