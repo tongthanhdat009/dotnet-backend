@@ -5,6 +5,7 @@ using dotnet_backend.Services.Interface;
 using dotnet_backend.Models;
 using dotnet_backend.Dtos;
 using System.Data;
+using BCrypt.Net;
 
 namespace dotnet_backend.Services;
 
@@ -82,10 +83,13 @@ public class UserService : IUserService
         if (existed)
             throw new ArgumentException("Tên đăng nhập đã được sử dụng");
 
+        // Băm mật khẩu trước khi lưu vào database
+        var hashedPassword = BCrypt.Net.BCrypt.HashPassword(userDto.Password);
+
         var user = new User
         {
             Username = userDto.Username,
-            Password = userDto.Password,
+            Password = hashedPassword,
             FullName = userDto.FullName,
             Role = userDto.Role
         };
@@ -128,9 +132,13 @@ public class UserService : IUserService
         {
             return null;
         }
+        
+        // Băm mật khẩu trước khi cập nhật vào database
+        var hashedPassword = BCrypt.Net.BCrypt.HashPassword(userDto.Password);
+        
         // update fields
         userToUpdate.Username = userDto.Username;
-        userToUpdate.Password = userDto.Password;
+        userToUpdate.Password = hashedPassword;
         userToUpdate.FullName = userDto.FullName;
         userToUpdate.Role = userDto.Role;
 
