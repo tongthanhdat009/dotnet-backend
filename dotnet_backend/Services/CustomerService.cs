@@ -76,6 +76,24 @@ public class CustomerService : ICustomerService
             Address = customer.Address
         };
     }
+
+    public async Task<IEnumerable<TopCustomerDto>> GetTopCustomersByOrderCountAsync(int topCount = 3)
+    {
+        var result = await _context.Orders
+            .GroupBy(o => o.Customer.Name)
+            .Select(g => new TopCustomerDto
+            {
+                Name = g.Key,
+                TotalOrders = g.Count()
+            })
+            .OrderByDescending(u => u.TotalOrders)
+            .Take(topCount)
+            .ToListAsync();
+
+        return result;
+    }
+
+
     public async Task<CustomerDto> CreateCustomerAsync(CustomerDto customerDto)
     {
         // Validate input

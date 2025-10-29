@@ -33,6 +33,12 @@ public class UserService : IUserService
             .ToListAsync();
     }
 
+    // Get total users
+    public async Task<int> GetTotalUsersAsync()
+    {
+        return await _context.Users.CountAsync();
+    }
+
     // Get user by ID
     public async Task<UserDto?> GetUserByIdAsync(int id)
     {
@@ -72,7 +78,7 @@ public class UserService : IUserService
         {
             throw new ArgumentException("Role là bắt buộc");
         }
-        if (userDto.Role !=1 && userDto.Role != 2)
+        if (userDto.Role != 1 && userDto.Role != 2)
         {
             throw new ArgumentException("Role không hợp lệ");
         }

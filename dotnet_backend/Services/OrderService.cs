@@ -143,6 +143,93 @@ public class OrderService : IOrderService
             .ToListAsync();
     }
 
+    public async Task<IEnumerable<PeakTimeDto>> GetPeakTimeStatsAsync()
+    {
+        var result = await _context.Orders
+            .Where(o => o.OrderDate.HasValue)
+            .Select(o => o.OrderDate.Value.TimeOfDay)
+            .ToListAsync();
+
+        if (!result.Any()) return new List<PeakTimeDto>();
+
+        int morning = result.Count(t => t >= new TimeSpan(7, 0, 0) && t < new TimeSpan(11, 30, 0));
+        int afternoon = result.Count(t => t >= new TimeSpan(11, 30, 0) && t < new TimeSpan(17, 0, 0));
+        int evening = result.Count(t => t >= new TimeSpan(17, 0, 0) && t < new TimeSpan(20, 30, 0));
+
+        int total = morning + afternoon + evening;
+
+        if (total == 0) return new List<PeakTimeDto>();
+
+        return new List<PeakTimeDto>
+        {
+            new PeakTimeDto { TimeRange = "07:00 - 11:30", Percentage = Math.Round((decimal)morning / total * 100, 2) },
+            new PeakTimeDto { TimeRange = "11:30 - 17:00", Percentage = Math.Round((decimal)afternoon / total * 100, 2) },
+            new PeakTimeDto { TimeRange = "17:00 - 20:30", Percentage = Math.Round((decimal)evening / total * 100, 2) },
+        };
+    }
+
+    public async Task<int> GetTotalOrdersAsync()
+    {
+        return await _context.Orders.CountAsync();
+    }
+
+    public async Task<IEnumerable<OrderByMonthDto>> GetOrdersByYearAsync(int year)
+    {
+        var result = await _context.Orders
+                    .Where(o => o.OrderDate.Value.Year == year)
+                    .GroupBy(o => o.OrderDate.Value.Month)
+                    .Select(g => new OrderByMonthDto
+                    {
+                        Month = g.Key,
+                        TotalOrders = g.Count()
+                    })
+                    .OrderBy(o => o.Month)
+                    .ToListAsync();
+
+
+
+        var fullYear = Enumerable.Range(1, 12)
+            .GroupJoin(result,
+                m => m,
+                r => r.Month,
+                (m, r) => new OrderByMonthDto
+                {
+                    Month = m,
+                    TotalOrders = r.FirstOrDefault()?.TotalOrders ?? 0
+                })
+            .ToList();
+
+        return fullYear;
+    }
+
+    public async Task<IEnumerable<SalesByMonthDto>> GetSalesByYearAsync(int year)
+    {
+        var result = await _context.Orders
+            .Where(o => o.OrderDate.Value.Year == year)
+            .GroupBy(o => o.OrderDate.Value.Month)
+            .Select(g => new SalesByMonthDto
+            {
+                Month = g.Key,
+                TotalSales = g.Sum(o => o.TotalAmount ?? 0)
+            })
+            .OrderBy(o => o.Month)
+            .ToListAsync();
+
+        var fullYear = Enumerable.Range(1, 12)
+            .GroupJoin(result,
+                m => m,
+                r => r.Month,
+                (m, r) => new SalesByMonthDto
+                {
+                    Month = m,
+                    TotalSales = r.FirstOrDefault()?.TotalSales ?? 0
+                })
+            .ToList();
+
+        return fullYear;
+    }
+
+
 
     public async Task<OrderDto> GetOrderByIdAsync(int id)
     {
