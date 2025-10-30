@@ -141,7 +141,8 @@ UNLOCK TABLES;
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'admin','123456','Quản trị viên',1,'2025-10-08 12:20:48'),(2,'staff01','123456','Nguyễn Văn A',2,'2025-10-08 12:20:48'),(3,'staff02','123456','Lê Thị B',2,'2025-10-08 12:20:48');
+-- pass 123456
+INSERT INTO `users` VALUES (1,'admin','$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK','Quản trị viên',1,'2025-10-08 12:20:48'),(2,'staff01','$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK','Nguyễn Văn A',2,'2025-10-08 12:20:48'),(3,'staff02','$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK','Lê Thị B',2,'2025-10-08 12:20:48');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
