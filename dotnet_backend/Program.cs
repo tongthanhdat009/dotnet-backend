@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using dotnet_backend.Database;
 using dotnet_backend.Services;
 using dotnet_backend.Services.Interface;
+using dotnet_backend.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -26,6 +27,7 @@ builder.Services.AddScoped<IInventoryService, InventoryService>();
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IRoleService, RoleService>();
 
 // ✅ 4. Bật CORS cho phép Vue (localhost:5173)
 builder.Services.AddCors(options =>
