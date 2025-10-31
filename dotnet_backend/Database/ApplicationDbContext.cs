@@ -41,6 +41,8 @@ public partial class ApplicationDbContext : DbContext
 
     public virtual DbSet<User> Users { get; set; }
 
+    public virtual DbSet<RolePermission> RolePermissions { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder
@@ -332,26 +334,26 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.RoleName)
                 .HasMaxLength(50)
                 .HasColumnName("role_name");
+        });
 
-            entity.HasMany(d => d.Permissions).WithMany(p => p.Roles)
-                .UsingEntity<Dictionary<string, object>>(
-                    "RolePermission",
-                    r => r.HasOne<Permission>().WithMany()
-                        .HasForeignKey("PermissionId")
-                        .HasConstraintName("role_permissions_ibfk_2"),
-                    l => l.HasOne<Role>().WithMany()
-                        .HasForeignKey("RoleId")
-                        .HasConstraintName("role_permissions_ibfk_1"),
-                    j =>
-                    {
-                        j.HasKey("RoleId", "PermissionId")
-                            .HasName("PRIMARY")
-                            .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
-                        j.ToTable("role_permissions");
-                        j.HasIndex(new[] { "PermissionId" }, "permission_id");
-                        j.IndexerProperty<int>("RoleId").HasColumnName("role_id");
-                        j.IndexerProperty<int>("PermissionId").HasColumnName("permission_id");
-                    });
+        modelBuilder.Entity<RolePermission>(entity =>
+        {
+            entity.HasKey(e => new { e.RoleId, e.PermissionId }).HasName("PRIMARY");
+
+            entity.ToTable("role_permissions");
+
+            entity.HasIndex(e => e.PermissionId, "permission_id");
+
+            entity.Property(e => e.RoleId).HasColumnName("role_id");
+            entity.Property(e => e.PermissionId).HasColumnName("permission_id");
+
+            entity.HasOne(d => d.Role).WithMany(p => p.RolePermissions)
+                .HasForeignKey(d => d.RoleId)
+                .HasConstraintName("role_permissions_ibfk_1");
+
+            entity.HasOne(d => d.Permission).WithMany(p => p.RolePermissions)
+                .HasForeignKey(d => d.PermissionId)
+                .HasConstraintName("role_permissions_ibfk_2");
         });
 
         modelBuilder.Entity<Supplier>(entity =>
