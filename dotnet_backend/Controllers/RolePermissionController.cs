@@ -28,4 +28,32 @@ public class RolePermissionController : ControllerBase
             return StatusCode(500, new { message = "Lỗi server", error = ex.Message });
         }
     }
+
+    [HttpPost("assign")]
+    public async Task<IActionResult> AssignPermissionToRole([FromBody] RolePermissionDto dto)
+    {
+        try
+        {
+            await _rolePermissionService.AssignPermissionToRoleAsync(dto.RoleId, dto.PermissionId);
+            return Ok(new { message = "Gán quyền thành công" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Lỗi khi gán quyền", error = ex.Message });
+        }
+    }
+
+    [HttpDelete("remove")]
+    public async Task<IActionResult> RemovePermissionFromRole([FromBody] RolePermissionDto dto)
+    {
+        try
+        {
+            await _rolePermissionService.RemovePermissionFromRoleAsync(dto.RoleId, dto.PermissionId);
+            return Ok(new { message = "Xóa quyền thành công" });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Lỗi khi xóa quyền", error = ex.Message });
+        }
+    }
 }
