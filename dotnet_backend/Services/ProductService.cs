@@ -31,11 +31,24 @@ public class ProductService : IProductService
             Unit = p.Unit,
             CategoryId = p.CategoryId,
             SupplierId = p.SupplierId,
+            Category = p.Category != null ? new CategoryDto
+            {
+                CategoryId = p.Category.CategoryId,
+                CategoryName = p.Category.CategoryName
+            } : null,
+            Supplier = p.Supplier != null ? new SupplierDto
+            {
+                SupplierId = p.Supplier.SupplierId,
+                Name = p.Supplier.Name,
+                Phone = p.Supplier.Phone,
+                Email = p.Supplier.Email,
+                Address = p.Supplier.Address
+            } : null
         }).ToListAsync();
 
     }
 
-    public async Task<ProductDto> GetProductByIdAsync(int id)
+    public async Task<ProductDto?> GetProductByIdAsync(int id)
     {
         var productDto = await _context.Products
             .Include(p => p.Category)
@@ -50,6 +63,19 @@ public class ProductService : IProductService
                 Unit = p.Unit,
                 CategoryId = p.CategoryId,
                 SupplierId = p.SupplierId,
+                Category = p.Category != null ? new CategoryDto
+                {
+                    CategoryId = p.Category.CategoryId,
+                    CategoryName = p.Category.CategoryName
+                } : null,
+                Supplier = p.Supplier != null ? new SupplierDto
+                {
+                    SupplierId = p.Supplier.SupplierId,
+                    Name = p.Supplier.Name,
+                    Phone = p.Supplier.Phone,
+                    Email = p.Supplier.Email,
+                    Address = p.Supplier.Address
+                } : null
             })
             .FirstOrDefaultAsync();
 
@@ -124,6 +150,19 @@ public class ProductService : IProductService
                 Unit = p.Unit,
                 CategoryId = p.CategoryId,
                 SupplierId = p.SupplierId,
+                Category = p.Category != null ? new CategoryDto
+                {
+                    CategoryId = p.Category.CategoryId,
+                    CategoryName = p.Category.CategoryName
+                } : null,
+                Supplier = p.Supplier != null ? new SupplierDto
+                {
+                    SupplierId = p.Supplier.SupplierId,
+                    Name = p.Supplier.Name,
+                    Phone = p.Supplier.Phone,
+                    Email = p.Supplier.Email,
+                    Address = p.Supplier.Address
+                } : null
             })
             .FirstOrDefaultAsync();
 
@@ -194,6 +233,19 @@ public class ProductService : IProductService
                 Unit = p.Unit,
                 CategoryId = p.CategoryId,
                 SupplierId = p.SupplierId,
+                Category = p.Category != null ? new CategoryDto
+                {
+                    CategoryId = p.Category.CategoryId,
+                    CategoryName = p.Category.CategoryName
+                } : null,
+                Supplier = p.Supplier != null ? new SupplierDto
+                {
+                    SupplierId = p.Supplier.SupplierId,
+                    Name = p.Supplier.Name,
+                    Phone = p.Supplier.Phone,
+                    Email = p.Supplier.Email,
+                    Address = p.Supplier.Address
+                } : null
             })
             .FirstOrDefaultAsync();
 

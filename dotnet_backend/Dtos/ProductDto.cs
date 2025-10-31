@@ -1,3 +1,6 @@
+using dotnet_backend.Models;
+using dotnet_backend.Dtos;
+
 public class ProductDto
 {
     public int ProductId { get; set; }
@@ -7,6 +10,10 @@ public class ProductDto
     public string Unit { get; set; }
 
     public DateTime? CreatedAt { get; set; }
+
+    public virtual CategoryDto? Category { get; set; }
+
+    public virtual SupplierDto? Supplier { get; set; }
 
     public int? CategoryId { get; set; }
 
