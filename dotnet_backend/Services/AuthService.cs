@@ -39,7 +39,7 @@ public class AuthService : IAuthService
 
         // Tạo tokens
         var accessToken = GenerateAccessToken(user);
-        var refreshToken = GenerateRefreshToken();
+        var refreshToken = GenerateRefreshToken(user); // Truyền user vào
 
         return new LoginResponseDto
         {
@@ -141,14 +141,15 @@ public class AuthService : IAuthService
     /// Tạo Refresh Token (thời gian sống dài: 7 ngày)
     /// Token này sẽ được mã hóa JWT để client có thể kiểm tra hạn sử dụng
     /// </summary>
-    private string GenerateRefreshToken()
+    private string GenerateRefreshToken(User user)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.ASCII.GetBytes(_configuration["Jwt:Secret"] ?? "");
 
-        // RT không cần chứa claims thực tế, chỉ là một JWT token để xác định nó hợp lệ
+        // RT cần chứa userId để biết refresh cho user nào
         var claims = new List<Claim>
         {
+            new Claim("sub", user.UserId.ToString()), // userId để validate
             new Claim("type", "refresh")
         };
 

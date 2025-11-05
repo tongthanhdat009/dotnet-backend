@@ -36,7 +36,7 @@ namespace dotnet_backend.Controllers
         }
 
         // POST: api/users - CHỈ Admin hoặc Manager mới tạo được user
-        [Authorize(Roles = "Admin,Manager")]
+        [Authorize]
         [HttpPost]
         public async Task<ActionResult<UserDto>> CreateUser([FromBody] UserDto userDto)
         {
@@ -61,7 +61,7 @@ namespace dotnet_backend.Controllers
 
 
         // PUT: api/users/5 - CHỈ Admin hoặc Manager mới update được
-        [Authorize(Roles = "Admin,Manager")]
+        [Authorize]
         [HttpPut("{id}")]
         public async Task<ActionResult<UserDto>> UpdateUser(int id, [FromBody] UserDto userDto)
         {
@@ -89,7 +89,7 @@ namespace dotnet_backend.Controllers
         }
 
         // DELETE: api/users/5 - CHỈ Admin mới xóa được
-        [Authorize(Roles = "Admin")]
+        [Authorize]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {
