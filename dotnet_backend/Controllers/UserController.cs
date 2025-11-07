@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using dotnet_backend.Services.Interface;
 using dotnet_backend.Dtos;
 
 namespace dotnet_backend.Controllers
 {
+    [Authorize] // Bảo vệ toàn bộ controller
     [ApiController]
     [Route("api/[controller]")]
     public class UsersController : ControllerBase
@@ -15,7 +17,7 @@ namespace dotnet_backend.Controllers
             _userService = userService;
         }
 
-        // GET: api/users
+        // GET: api/users - Ai đã login cũng xem được
         [HttpGet]
         public async Task<ActionResult<IEnumerable<UserDto>>> GetUsers()
         {
@@ -31,6 +33,7 @@ namespace dotnet_backend.Controllers
         }
 
         // GET: api/users/5
+        // GET: api/users/5 - Ai đã login cũng xem được
         [HttpGet("{id:int}")]
         public async Task<ActionResult<UserDto>> GetUser(int id)
         {
@@ -39,7 +42,7 @@ namespace dotnet_backend.Controllers
             return Ok(user);
         }
 
-        // POST: api/users
+        // POST: api/users - CHỈ Admin hoặc Manager mới tạo được user
         [HttpPost]
         public async Task<ActionResult<UserDto>> CreateUser([FromBody] UserDto userDto)
         {
@@ -63,9 +66,8 @@ namespace dotnet_backend.Controllers
         }
 
 
-        // PUT: api/users/5
+        // PUT: api/users/5 - CHỈ Admin hoặc Manager mới update được
         [HttpPut("{id}")]
-
         public async Task<ActionResult<UserDto>> UpdateUser(int id, [FromBody] UserDto userDto)
         {
             if (id != userDto.UserId)
@@ -91,7 +93,7 @@ namespace dotnet_backend.Controllers
             return Ok(updatedUser);
         }
 
-        // DELETE: api/users/5
+        // DELETE: api/users/5 - CHỈ Admin mới xóa được
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(int id)
         {

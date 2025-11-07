@@ -1,8 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using dotnet_backend.Services.Interface;
 using dotnet_backend.Dtos;
 
 namespace dotnet_backend.Controllers;
+
+[Authorize] // Bảo vệ toàn bộ controller
 [ApiController]
 [Route("api/[controller]")]
 public class OrderController : ControllerBase

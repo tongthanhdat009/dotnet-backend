@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using dotnet_backend.Services.Interface;
 using dotnet_backend.Dtos;
 
 namespace dotnet_backend.Controllers;
 
+[Authorize] // Bảo vệ toàn bộ controller
 [ApiController]
 [Route("api/[controller]")]
 public class RolePermissionController : ControllerBase
@@ -54,6 +56,20 @@ public class RolePermissionController : ControllerBase
         catch (Exception ex)
         {
             return StatusCode(500, new { message = "Lỗi khi xóa quyền", error = ex.Message });
+        }
+    }
+
+    [HttpGet("role/{roleId}")]
+    public async Task<ActionResult<IEnumerable<PermissionDto>>> GetPermissionsByRole(int roleId)
+    {
+        try
+        {
+            var permissions = await _rolePermissionService.GetPermissionsByRoleIdAsync(roleId);
+            return Ok(permissions);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Lỗi khi lấy permissions", error = ex.Message });
         }
     }
 }

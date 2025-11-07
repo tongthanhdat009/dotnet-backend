@@ -1,9 +1,11 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using dotnet_backend.Database;
 using Microsoft.EntityFrameworkCore;
 
 namespace dotnet_backend.Controllers
 {
+    [AllowAnonymous] // Controller test không cần xác thực
     [ApiController]
     [Route("api/[controller]")] // URL sẽ là /api/test
     public class TestController : ControllerBase

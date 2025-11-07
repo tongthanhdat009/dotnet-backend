@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using dotnet_backend.Services.Interface;
 using dotnet_backend.Dtos;
@@ -5,6 +6,7 @@ using Internal;
 
 namespace dotnet_backend.Controllers;
 
+[Authorize] // Bảo vệ toàn bộ controller
 [ApiController]
 [Route("api/[controller]")]
 public class ProductsController : ControllerBase
@@ -45,8 +47,6 @@ public class ProductsController : ControllerBase
         return Ok(product);
     }
 
-
-
     [HttpPost]
     public async Task<IActionResult> CreateProduct([FromBody] ProductDto productDto)
     {
@@ -65,6 +65,7 @@ public class ProductsController : ControllerBase
         }
         return CreatedAtAction(nameof(GetProduct), new { id = createdProduct.ProductId }, createdProduct);
     }
+
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateProduct(int id, [FromBody] ProductDto productDto)
     {

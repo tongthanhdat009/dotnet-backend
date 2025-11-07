@@ -120,4 +120,21 @@ public class RolePermissionService : IRolePermissionService
             await _context.SaveChangesAsync();
         }
     }
+
+    public async Task<IEnumerable<PermissionDto>> GetPermissionsByRoleIdAsync(int roleId)
+    {
+        var permissions = await _context.RolePermissions
+            .Where(rp => rp.RoleId == roleId)
+            .Include(rp => rp.Permission)
+            .Select(rp => new PermissionDto
+            {
+                PermissionId = rp.Permission.PermissionId,
+                PermissionName = rp.Permission.PermissionName,
+                ActionKey = rp.Permission.ActionKey,
+                Description = rp.Permission.Description
+            })
+            .ToListAsync();
+
+        return permissions;
+    }
 }

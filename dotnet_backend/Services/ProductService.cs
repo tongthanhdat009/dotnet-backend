@@ -10,6 +10,8 @@ namespace dotnet_backend.Services;
 public class ProductService : IProductService
 {
     private readonly ApplicationDbContext _context;
+    private static int? _cachedProductCount = null;
+    private static DateTime? _cacheTime = null;
 
     // Dùng Dependency Injection để inject DbContext vào
     public ProductService(ApplicationDbContext context)
@@ -72,7 +74,17 @@ public class ProductService : IProductService
 
     public async Task<int> GetTotalProductsAsync()
     {
-        return await _context.Products.CountAsync();
+        // Cache kết quả trong 5 phút để tránh query chậm
+        if (_cachedProductCount.HasValue && _cacheTime.HasValue && 
+            (DateTime.Now - _cacheTime.Value).TotalMinutes < 5)
+        {
+            return _cachedProductCount.Value;
+        }
+
+        var count = await _context.Products.CountAsync();
+        _cachedProductCount = count;
+        _cacheTime = DateTime.Now;
+        return count;
     }
 
     public async Task<ProductDto> GetProductByIdAsync(int id)

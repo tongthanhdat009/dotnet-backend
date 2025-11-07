@@ -11,4 +11,5 @@ public interface IRolePermissionService
     Task<bool> DeleteRolePermissionAsync(int id);
     Task AssignPermissionToRoleAsync(int roleId, int permissionId);
     Task RemovePermissionFromRoleAsync(int roleId, int permissionId);
+    Task<IEnumerable<PermissionDto>> GetPermissionsByRoleIdAsync(int roleId);
 }

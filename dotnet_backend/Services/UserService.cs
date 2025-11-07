@@ -1,7 +1,6 @@
 using dotnet_backend.Services.Interface;
 using Microsoft.EntityFrameworkCore;
 using dotnet_backend.Database;
-using dotnet_backend.Services.Interface;
 using dotnet_backend.Models;
 using dotnet_backend.Dtos;
 using System.Data;
