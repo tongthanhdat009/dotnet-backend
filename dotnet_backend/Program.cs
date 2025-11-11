@@ -61,6 +61,7 @@ builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<IRolePermissionService, RolePermissionService>();
+builder.Services.AddScoped<IPromotionService, PromotionService>();
 
 // ✅ 6. Bật CORS cho phép Vue (localhost:5173)
 builder.Services.AddCors(options =>
