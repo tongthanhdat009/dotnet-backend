@@ -30,4 +30,6 @@ public partial class Order
     public virtual Promotion? Promo { get; set; }
 
     public virtual User? User { get; set; }
+
+    public virtual ICollection<Bill> Bills { get; set; } = new List<Bill>();
 }

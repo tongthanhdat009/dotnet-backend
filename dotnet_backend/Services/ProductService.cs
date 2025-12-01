@@ -24,6 +24,7 @@ public class ProductService : IProductService
         return await _context.Products
         .Include(p => p.Category)
         .Include(p => p.Supplier)
+        .Include(p => p.Inventories)
         .Select(p => new ProductDto
         {
             ProductId = p.ProductId,
@@ -33,6 +34,7 @@ public class ProductService : IProductService
             Unit = p.Unit,
             CategoryId = p.CategoryId,
             SupplierId = p.SupplierId,
+            Quantity = p.Inventories.FirstOrDefault() != null ? p.Inventories.FirstOrDefault().Quantity : 0,
             Category = p.Category != null ? new CategoryDto
             {
                 CategoryId = p.Category.CategoryId,
@@ -92,6 +94,7 @@ public class ProductService : IProductService
         var productDto = await _context.Products
             .Include(p => p.Category)
             .Include(p => p.Supplier)
+            .Include(p => p.Inventories)
             .Where(p => p.ProductId == id)
             .Select(p => new ProductDto
             {
@@ -102,6 +105,7 @@ public class ProductService : IProductService
                 Unit = p.Unit,
                 CategoryId = p.CategoryId,
                 SupplierId = p.SupplierId,
+                Quantity = p.Inventories.FirstOrDefault() != null ? p.Inventories.FirstOrDefault().Quantity : 0,
                 Category = p.Category != null ? new CategoryDto
                 {
                     CategoryId = p.Category.CategoryId,
@@ -179,6 +183,7 @@ public class ProductService : IProductService
         var createdProduct = await _context.Products
             .Include(p => p.Category)
             .Include(p => p.Supplier)
+            .Include(p => p.Inventories)
             .Where(p => p.ProductId == product.ProductId)
             .Select(p => new ProductDto
             {
@@ -189,6 +194,7 @@ public class ProductService : IProductService
                 Unit = p.Unit,
                 CategoryId = p.CategoryId,
                 SupplierId = p.SupplierId,
+                Quantity = p.Inventories.FirstOrDefault() != null ? p.Inventories.FirstOrDefault().Quantity : 0,
                 Category = p.Category != null ? new CategoryDto
                 {
                     CategoryId = p.Category.CategoryId,
@@ -262,6 +268,7 @@ public class ProductService : IProductService
         var updatedProduct = await _context.Products
             .Include(p => p.Category)
             .Include(p => p.Supplier)
+            .Include(p => p.Inventories)
             .Where(p => p.ProductId == id)
             .Select(p => new ProductDto
             {
@@ -272,6 +279,7 @@ public class ProductService : IProductService
                 Unit = p.Unit,
                 CategoryId = p.CategoryId,
                 SupplierId = p.SupplierId,
+                Quantity = p.Inventories.FirstOrDefault() != null ? p.Inventories.FirstOrDefault().Quantity : 0,
                 Category = p.Category != null ? new CategoryDto
                 {
                     CategoryId = p.Category.CategoryId,

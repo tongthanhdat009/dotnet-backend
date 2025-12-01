@@ -43,6 +43,12 @@ public partial class ApplicationDbContext : DbContext
 
     public virtual DbSet<RolePermission> RolePermissions { get; set; }
 
+    public virtual DbSet<Cart> Carts { get; set; }
+
+    public virtual DbSet<CartItem> CartItems { get; set; }
+
+    public virtual DbSet<Bill> Bills { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder
@@ -185,7 +191,7 @@ public partial class ApplicationDbContext : DbContext
 
             entity.HasOne(d => d.Product).WithMany(p => p.OrderItems)
                 .HasForeignKey(d => d.ProductId)
-                .OnDelete(DeleteBehavior.SetNull)
+                .OnDelete(DeleteBehavior.Restrict)
                 .HasConstraintName("fk_order_items_products");
         });
 
@@ -406,6 +412,112 @@ public partial class ApplicationDbContext : DbContext
             entity.HasOne(d => d.RoleNavigation).WithMany(p => p.Users)
                 .HasForeignKey(d => d.Role)
                 .HasConstraintName("users_ibfk_1");
+        });
+
+        modelBuilder.Entity<Cart>(entity =>
+        {
+            entity.HasKey(e => e.CartId).HasName("PRIMARY");
+
+            entity.ToTable("carts");
+
+            entity.HasIndex(e => e.CustomerId, "fk_carts_customers");
+
+            entity.Property(e => e.CartId).HasColumnName("cart_id");
+            entity.Property(e => e.CustomerId).HasColumnName("customer_id");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp")
+                .HasColumnName("created_at");
+            entity.Property(e => e.UpdatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp")
+                .HasColumnName("updated_at");
+
+            entity.HasOne(d => d.Customer).WithMany(p => p.Carts)
+                .HasForeignKey(d => d.CustomerId)
+                .HasConstraintName("fk_carts_customers");
+        });
+
+        modelBuilder.Entity<CartItem>(entity =>
+        {
+            entity.HasKey(e => e.CartItemId).HasName("PRIMARY");
+
+            entity.ToTable("cart_items");
+
+            entity.HasIndex(e => e.CartId, "fk_cart_items_carts");
+
+            entity.HasIndex(e => e.ProductId, "fk_cart_items_products");
+
+            entity.Property(e => e.CartItemId).HasColumnName("cart_item_id");
+            entity.Property(e => e.CartId).HasColumnName("cart_id");
+            entity.Property(e => e.ProductId).HasColumnName("product_id");
+            entity.Property(e => e.Quantity)
+                .HasDefaultValue(1)
+                .HasColumnName("quantity");
+            entity.Property(e => e.Price)
+                .HasPrecision(10, 2)
+                .HasColumnName("price");
+            entity.Property(e => e.Subtotal)
+                .HasPrecision(10, 2)
+                .HasColumnName("subtotal");
+            entity.Property(e => e.AddedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp")
+                .HasColumnName("added_at");
+
+            entity.HasOne(d => d.Cart).WithMany(p => p.CartItems)
+                .HasForeignKey(d => d.CartId)
+                .HasConstraintName("fk_cart_items_carts");
+
+            entity.HasOne(d => d.Product).WithMany(p => p.CartItems)
+                .HasForeignKey(d => d.ProductId)
+                .HasConstraintName("fk_cart_items_products");
+        });
+
+        modelBuilder.Entity<Bill>(entity =>
+        {
+            entity.HasKey(e => e.BillId).HasName("PRIMARY");
+
+            entity.ToTable("bills");
+
+            entity.HasIndex(e => e.OrderId, "fk_bills_orders");
+
+            entity.HasIndex(e => e.CustomerId, "fk_bills_customers");
+
+            entity.Property(e => e.BillId).HasColumnName("bill_id");
+            entity.Property(e => e.OrderId).HasColumnName("order_id");
+            entity.Property(e => e.CustomerId).HasColumnName("customer_id");
+            entity.Property(e => e.TotalAmount)
+                .HasPrecision(10, 2)
+                .HasColumnName("total_amount");
+            entity.Property(e => e.DiscountAmount)
+                .HasPrecision(10, 2)
+                .HasColumnName("discount_amount");
+            entity.Property(e => e.FinalAmount)
+                .HasPrecision(10, 2)
+                .HasColumnName("final_amount");
+            entity.Property(e => e.PaymentMethod)
+                .HasMaxLength(50)
+                .HasColumnName("payment_method");
+            entity.Property(e => e.Status)
+                .HasDefaultValue("unpaid")
+                .HasColumnType("enum('unpaid','paid','cancelled')")
+                .HasColumnName("status");
+            entity.Property(e => e.CreatedAt)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("timestamp")
+                .HasColumnName("created_at");
+            entity.Property(e => e.PaidAt)
+                .HasColumnType("timestamp")
+                .HasColumnName("paid_at");
+
+            entity.HasOne(d => d.Order).WithMany(p => p.Bills)
+                .HasForeignKey(d => d.OrderId)
+                .HasConstraintName("fk_bills_orders");
+
+            entity.HasOne(d => d.Customer).WithMany(p => p.Bills)
+                .HasForeignKey(d => d.CustomerId)
+                .HasConstraintName("fk_bills_customers");
         });
 
         OnModelCreatingPartial(modelBuilder);

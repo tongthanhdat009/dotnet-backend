@@ -31,7 +31,29 @@ UNLOCK TABLES;
 
 LOCK TABLES `customers` WRITE;
 /*!40000 ALTER TABLE `customers` DISABLE KEYS */;
-INSERT INTO `customers` VALUES (0,'Khách vãng lai',null,null,null,'2025-10-08 12:20:48'),(1,'Khách hàng 1','0909000001','kh1@mail.com','Địa chỉ 1','2025-10-08 12:20:48'),(2,'Khách hàng 2','0909000002','kh2@mail.com','Địa chỉ 2','2025-10-08 12:20:48'),(3,'Khách hàng 3','0909000003','kh3@mail.com','Địa chỉ 3','2025-10-08 12:20:48'),(4,'Khách hàng 4','0909000004','kh4@mail.com','Địa chỉ 4','2025-10-08 12:20:48'),(5,'Khách hàng 5','0909000005','kh5@mail.com','Địa chỉ 5','2025-10-08 12:20:48'),(6,'Khách hàng 6','0909000006','kh6@mail.com','Địa chỉ 6','2025-10-08 12:20:48'),(7,'Khách hàng 7','0909000007','kh7@mail.com','Địa chỉ 7','2025-10-08 12:20:48'),(8,'Khách hàng 8','0909000008','kh8@mail.com','Địa chỉ 8','2025-10-08 12:20:48'),(9,'Khách hàng 9','0909000009','kh9@mail.com','Địa chỉ 9','2025-10-08 12:20:48'),(10,'Khách hàng 10','0909000010','kh10@mail.com','Địa chỉ 10','2025-10-08 12:20:48'),(11,'Khách hàng 11','0909000011','kh11@mail.com','Địa chỉ 11','2025-10-08 12:20:48'),(12,'Khách hàng 12','0909000012','kh12@mail.com','Địa chỉ 12','2025-10-08 12:20:48'),(13,'Khách hàng 13','0909000013','kh13@mail.com','Địa chỉ 13','2025-10-08 12:20:48'),(14,'Khách hàng 14','0909000014','kh14@mail.com','Địa chỉ 14','2025-10-08 12:20:48'),(15,'Khách hàng 15','0909000015','kh15@mail.com','Địa chỉ 15','2025-10-08 12:20:48'),(16,'Khách hàng 16','0909000016','kh16@mail.com','Địa chỉ 16','2025-10-08 12:20:48'),(17,'Khách hàng 17','0909000017','kh17@mail.com','Địa chỉ 17','2025-10-08 12:20:48'),(18,'Khách hàng 18','0909000018','kh18@mail.com','Địa chỉ 18','2025-10-08 12:20:48'),(19,'Khách hàng 19','0909000019','kh19@mail.com','Địa chỉ 19','2025-10-08 12:20:48'),(20,'Khách hàng 20','0909000020','kh20@mail.com','Địa chỉ 20','2025-10-08 12:20:48');
+-- password: 123456 (BCrypt hash giống user)
+INSERT INTO `customers` VALUES 
+(0,'Khách vãng lai',null,null,null,null,'2025-10-08 12:20:48'),
+(1,'Khách hàng 1','0909000001','kh1@mail.com','$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK','Địa chỉ 1','2025-10-08 12:20:48'),
+(2,'Khách hàng 2','0909000002','kh2@mail.com','$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK','Địa chỉ 2','2025-10-08 12:20:48'),
+(3,'Khách hàng 3','0909000003','kh3@mail.com','$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK','Địa chỉ 3','2025-10-08 12:20:48'),
+(4,'Khách hàng 4','0909000004','kh4@mail.com','$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK','Địa chỉ 4','2025-10-08 12:20:48'),
+(5,'Khách hàng 5','0909000005','kh5@mail.com','$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK','Địa chỉ 5','2025-10-08 12:20:48'),
+(6,'Khách hàng 6','0909000006','kh6@mail.com','$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK','Địa chỉ 6','2025-10-08 12:20:48'),
+(7,'Khách hàng 7','0909000007','kh7@mail.com','$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK','Địa chỉ 7','2025-10-08 12:20:48'),
+(8,'Khách hàng 8','0909000008','kh8@mail.com','$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK','Địa chỉ 8','2025-10-08 12:20:48'),
+(9,'Khách hàng 9','0909000009','kh9@mail.com','$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK','Địa chỉ 9','2025-10-08 12:20:48'),
+(10,'Khách hàng 10','0909000010','kh10@mail.com','$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK','Địa chỉ 10','2025-10-08 12:20:48'),
+(11,'Khách hàng 11','0909000011','kh11@mail.com','$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK','Địa chỉ 11','2025-10-08 12:20:48'),
+(12,'Khách hàng 12','0909000012','kh12@mail.com','$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK','Địa chỉ 12','2025-10-08 12:20:48'),
+(13,'Khách hàng 13','0909000013','kh13@mail.com','$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK','Địa chỉ 13','2025-10-08 12:20:48'),
+(14,'Khách hàng 14','0909000014','kh14@mail.com','$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK','Địa chỉ 14','2025-10-08 12:20:48'),
+(15,'Khách hàng 15','0909000015','kh15@mail.com','$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK','Địa chỉ 15','2025-10-08 12:20:48'),
+(16,'Khách hàng 16','0909000016','kh16@mail.com','$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK','Địa chỉ 16','2025-10-08 12:20:48'),
+(17,'Khách hàng 17','0909000017','kh17@mail.com','$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK','Địa chỉ 17','2025-10-08 12:20:48'),
+(18,'Khách hàng 18','0909000018','kh18@mail.com','$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK','Địa chỉ 18','2025-10-08 12:20:48'),
+(19,'Khách hàng 19','0909000019','kh19@mail.com','$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK','Địa chỉ 19','2025-10-08 12:20:48'),
+(20,'Khách hàng 20','0909000020','kh20@mail.com','$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK','Địa chỉ 20','2025-10-08 12:20:48');
 /*!40000 ALTER TABLE `customers` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -145,6 +167,33 @@ LOCK TABLES `users` WRITE;
 INSERT INTO `users` VALUES (1,'admin','$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK','Quản trị viên',1,'2025-10-08 12:20:48'),(2,'staff01','$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK','Nguyễn Văn A',2,'2025-10-08 12:20:48'),(3,'staff02','$2a$11$blVO.EMh9OUxIvmnemek4.tgcv6BZkkCmyRo6Au7guZSUSIwH/foK','Lê Thị B',2,'2025-10-08 12:20:48');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Dumping data for table `bills`
+--
+
+LOCK TABLES `bills` WRITE;
+/*!40000 ALTER TABLE `bills` DISABLE KEYS */;
+INSERT INTO `bills` VALUES 
+(1,1,5,1292330.00,100000.00,1192330.00,'cash','paid','2025-10-08 12:20:48','2025-10-08 12:25:48'),
+(2,2,17,1731608.00,0.00,1731608.00,'e-wallet','paid','2025-10-08 12:20:48','2025-10-08 12:26:48'),
+(3,3,8,720782.00,0.00,720782.00,'e-wallet','paid','2025-10-08 12:20:48','2025-10-08 12:27:48'),
+(4,6,5,3888671.00,100000.00,3788671.00,'cash','paid','2025-10-08 12:20:48','2025-10-08 12:28:48'),
+(5,7,9,512594.00,102518.80,410075.20,'e-wallet','paid','2025-10-08 12:20:48','2025-10-08 12:29:48'),
+(6,10,11,1070239.00,100000.00,970239.00,'card','paid','2025-10-08 12:20:48','2025-10-08 12:30:48'),
+(7,14,6,2896096.00,50000.00,2846096.00,'cash','paid','2025-10-08 12:20:48','2025-10-08 12:31:48'),
+(8,16,10,1024090.00,50000.00,974090.00,'cash','paid','2025-10-08 12:20:48','2025-10-08 12:32:48'),
+(9,23,6,2154851.00,323227.65,1831623.35,'cash','paid','2025-10-08 12:20:48','2025-10-08 12:33:48'),
+(10,25,2,393847.00,100000.00,293847.00,'cash','paid','2025-10-08 12:20:48','2025-10-08 12:34:48'),
+(11,5,1,94180.00,0.00,94180.00,'cash','unpaid','2025-10-08 12:20:48',NULL),
+(12,11,20,1532741.00,0.00,1532741.00,'e-wallet','unpaid','2025-10-08 12:20:48',NULL),
+(13,15,10,186000.00,27900.00,158100.00,'card','paid','2025-10-08 12:20:48','2025-10-08 12:35:48');
+/*!40000 ALTER TABLE `bills` ENABLE KEYS */;
+UNLOCK TABLES;
+
+-- Unlock all tables at the end
+UNLOCK TABLES;
+
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;

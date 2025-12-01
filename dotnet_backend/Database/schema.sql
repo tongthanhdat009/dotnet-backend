@@ -1,289 +1,218 @@
--- MySQL dump 10.13  Distrib 8.0.43, for Win64 (x86_64)
---
--- Host: 127.0.0.1    Database: store_management
--- ------------------------------------------------------
--- Server version	8.0.43
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!50503 SET NAMES utf8 */;
-/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
-/*!40103 SET TIME_ZONE='+00:00' */;
-/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
-
---
--- Table structure for table `categories`
---
-
-DROP DATABASE IF EXISTS `store_management`;
-
--- Tạo lại cơ sở dữ liệu mới
-CREATE DATABASE `store_management`;
-
--- Chọn cơ sở dữ liệu vừa tạo để làm việc
-USE `store_management`;
-
-DROP TABLE IF EXISTS `categories`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `categories` (
-  `category_id` int NOT NULL AUTO_INCREMENT,
-  `category_name` varchar(100) NOT NULL,
-  PRIMARY KEY (`category_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  `category_id` int PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  `category_name` varchar(100) NOT NULL
+);
 
---
--- Table structure for table `customers`
---
-
-DROP TABLE IF EXISTS `customers`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `customers` (
-  `customer_id` int NOT NULL AUTO_INCREMENT,
+CREATE TABLE `suppliers` (
+  `supplier_id` int PRIMARY KEY NOT NULL AUTO_INCREMENT,
   `name` varchar(100) NOT NULL,
-  `phone` varchar(20) DEFAULT NULL,
-  `email` varchar(100) DEFAULT NULL,
+  `phone` varchar(20) DEFAULT null,
+  `email` varchar(100) DEFAULT null,
+  `address` text
+);
+
+CREATE TABLE `customers` (
+  `customer_id` int PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  `name` varchar(100) NOT NULL,
+  `phone` varchar(20) DEFAULT null,
+  `email` varchar(100) DEFAULT null,
+  `password` varchar(255) DEFAULT null,
   `address` text,
-  `created_at` timestamp NULL DEFAULT (now()),
-  PRIMARY KEY (`customer_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=21 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  `created_at` timestamp DEFAULT (now())
+);
 
---
--- Table structure for table `inventory`
---
-
-DROP TABLE IF EXISTS `inventory`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `inventory` (
-  `inventory_id` int NOT NULL AUTO_INCREMENT,
-  `product_id` int NOT NULL,
-  `quantity` int DEFAULT '0',
-  `updated_at` timestamp NULL DEFAULT (now()),
-  PRIMARY KEY (`inventory_id`),
-  KEY `fk_inventory_products` (`product_id`),
-  CONSTRAINT `fk_inventory_products` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=51 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `order_items`
---
-
-DROP TABLE IF EXISTS `order_items`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `order_items` (
-  `order_item_id` int NOT NULL AUTO_INCREMENT,
-  `order_id` int DEFAULT NULL,
-  `product_id` int DEFAULT NULL,
-  `quantity` int NOT NULL,
-  `price` decimal(10,2) NOT NULL,
-  `subtotal` decimal(10,2) NOT NULL,
-  PRIMARY KEY (`order_item_id`),
-  KEY `fk_order_items_orders` (`order_id`),
-  KEY `fk_order_items_products` (`product_id`),
-  CONSTRAINT `fk_order_items_orders` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_order_items_products` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=93 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `orders`
---
-
-DROP TABLE IF EXISTS `orders`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `orders` (
-  `order_id` int NOT NULL AUTO_INCREMENT,
-  `customer_id` int DEFAULT NULL,
-  `user_id` int DEFAULT NULL,
-  `promo_id` int DEFAULT NULL,
-  `order_date` timestamp NULL DEFAULT (now()),
-  `status` enum('pending','paid','canceled') DEFAULT 'pending',
-  `total_amount` decimal(10,2) DEFAULT NULL,
-  `discount_amount` decimal(10,2) DEFAULT '0.00',
-  PRIMARY KEY (`order_id`),
-  KEY `fk_orders_customers` (`customer_id`),
-  KEY `fk_orders_users` (`user_id`),
-  KEY `fk_orders_promotions` (`promo_id`),
-  CONSTRAINT `fk_orders_customers` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`customer_id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_orders_promotions` FOREIGN KEY (`promo_id`) REFERENCES `promotions` (`promo_id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_orders_users` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `payments`
---
-
-DROP TABLE IF EXISTS `payments`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `payments` (
-  `payment_id` int NOT NULL AUTO_INCREMENT,
-  `order_id` int NOT NULL,
-  `amount` decimal(10,2) NOT NULL,
-  `payment_method` enum('cash','card','bank_transfer','e-wallet') DEFAULT 'cash',
-  `payment_date` timestamp NULL DEFAULT (now()),
-  PRIMARY KEY (`payment_id`),
-  KEY `fk_payments_orders` (`order_id`),
-  CONSTRAINT `fk_payments_orders` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON DELETE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `permissions`
---
-
-DROP TABLE IF EXISTS `permissions`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `permissions` (
-  `permission_id` int NOT NULL AUTO_INCREMENT,
-  `permission_name` varchar(100) NOT NULL,
-  `action_key` varchar(50) NOT NULL,
-  `description` text,
-  PRIMARY KEY (`permission_id`),
-  UNIQUE KEY `action_key` (`action_key`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Table structure for table `products`
---
-
-DROP TABLE IF EXISTS `products`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `products` (
-  `product_id` int NOT NULL AUTO_INCREMENT,
-  `category_id` int DEFAULT NULL,
-  `supplier_id` int DEFAULT NULL,
+  `product_id` int PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  `category_id` int DEFAULT null,
+  `supplier_id` int DEFAULT null,
   `product_name` varchar(100) NOT NULL,
-  `barcode` varchar(50) DEFAULT NULL,
+  `barcode` varchar(50) DEFAULT null,
   `price` decimal(10,2) NOT NULL,
   `unit` varchar(20) DEFAULT 'pcs',
-  `created_at` timestamp NULL DEFAULT (now()),
-  PRIMARY KEY (`product_id`),
-  UNIQUE KEY `barcode` (`barcode`),
-  KEY `fk_products_categories` (`category_id`),
-  KEY `fk_products_suppliers` (`supplier_id`),
-  CONSTRAINT `fk_products_categories` FOREIGN KEY (`category_id`) REFERENCES `categories` (`category_id`) ON DELETE SET NULL,
-  CONSTRAINT `fk_products_suppliers` FOREIGN KEY (`supplier_id`) REFERENCES `suppliers` (`supplier_id`) ON DELETE SET NULL
-) ENGINE=InnoDB AUTO_INCREMENT=51 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  `created_at` timestamp DEFAULT (now())
+);
 
---
--- Table structure for table `promotions`
---
+CREATE TABLE `inventory` (
+  `inventory_id` int PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  `product_id` int NOT NULL,
+  `quantity` int DEFAULT '0',
+  `updated_at` timestamp DEFAULT (now())
+);
 
-DROP TABLE IF EXISTS `promotions`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `promotions` (
-  `promo_id` int NOT NULL AUTO_INCREMENT,
+  `promo_id` int PRIMARY KEY NOT NULL AUTO_INCREMENT,
   `promo_code` varchar(50) NOT NULL,
-  `description` varchar(255) DEFAULT NULL,
-  `discount_type` enum('percent','fixed') NOT NULL,
+  `description` varchar(255) DEFAULT null,
+  `discount_type` ENUM ('percent', 'fixed') NOT NULL,
   `discount_value` decimal(10,2) NOT NULL,
   `start_date` date NOT NULL,
   `end_date` date NOT NULL,
   `min_order_amount` decimal(10,2) DEFAULT '0.00',
   `usage_limit` int DEFAULT '0',
   `used_count` int DEFAULT '0',
-  `status` enum('active','inactive') DEFAULT 'active',
-  PRIMARY KEY (`promo_id`),
-  UNIQUE KEY `promo_code` (`promo_code`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  `status` ENUM ('active', 'inactive') DEFAULT 'active'
+);
 
---
--- Table structure for table `role_permissions`
---
+CREATE TABLE `roles` (
+  `role_id` int PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  `role_name` varchar(50) NOT NULL,
+  `description` text
+);
 
-DROP TABLE IF EXISTS `role_permissions`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `users` (
+  `user_id` int PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  `username` varchar(50) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `full_name` varchar(100) DEFAULT null,
+  `role` int DEFAULT null,
+  `created_at` timestamp DEFAULT (now())
+);
+
+CREATE TABLE `orders` (
+  `order_id` int PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  `customer_id` int DEFAULT null,
+  `user_id` int DEFAULT null,
+  `promo_id` int DEFAULT null,
+  `order_date` timestamp DEFAULT (now()),
+  `status` ENUM ('pending', 'paid', 'canceled') DEFAULT 'pending',
+  `total_amount` decimal(10,2) DEFAULT null,
+  `discount_amount` decimal(10,2) DEFAULT '0.00'
+);
+
+CREATE TABLE `order_items` (
+  `order_item_id` int PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  `order_id` int DEFAULT null,
+  `product_id` int DEFAULT null,
+  `quantity` int NOT NULL,
+  `price` decimal(10,2) NOT NULL,
+  `subtotal` decimal(10,2) NOT NULL
+);
+
+CREATE TABLE `payments` (
+  `payment_id` int PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  `order_id` int NOT NULL,
+  `amount` decimal(10,2) NOT NULL,
+  `payment_method` ENUM ('cash', 'card', 'bank_transfer', 'e-wallet') DEFAULT 'cash',
+  `payment_date` timestamp DEFAULT (now())
+);
+
+CREATE TABLE `permissions` (
+  `permission_id` int PRIMARY KEY NOT NULL AUTO_INCREMENT,
+  `permission_name` varchar(100) NOT NULL,
+  `action_key` varchar(50) NOT NULL,
+  `description` text
+);
+
 CREATE TABLE `role_permissions` (
   `role_id` int NOT NULL,
   `permission_id` int NOT NULL,
-  PRIMARY KEY (`role_id`,`permission_id`),
-  KEY `permission_id` (`permission_id`),
-  CONSTRAINT `role_permissions_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `roles` (`role_id`) ON DELETE CASCADE,
-  CONSTRAINT `role_permissions_ibfk_2` FOREIGN KEY (`permission_id`) REFERENCES `permissions` (`permission_id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+  PRIMARY KEY (`role_id`, `permission_id`)
+);
 
---
--- Table structure for table `roles`
---
+CREATE TABLE `carts` (
+  `cart_id` INT PRIMARY KEY AUTO_INCREMENT,
+  `customer_id` INT NOT NULL,
+  `created_at` TIMESTAMP DEFAULT (CURRENT_TIMESTAMP),
+  `updated_at` TIMESTAMP DEFAULT (CURRENT_TIMESTAMP)
+);
 
-DROP TABLE IF EXISTS `roles`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `roles` (
-  `role_id` int NOT NULL AUTO_INCREMENT,
-  `role_name` varchar(50) NOT NULL,
-  `description` text,
-  PRIMARY KEY (`role_id`),
-  UNIQUE KEY `role_name` (`role_name`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+CREATE TABLE `cart_items` (
+  `cart_item_id` INT PRIMARY KEY AUTO_INCREMENT,
+  `cart_id` INT NOT NULL,
+  `product_id` INT NOT NULL,
+  `quantity` INT NOT NULL DEFAULT 1,
+  `price` DECIMAL(10,2) NOT NULL,
+  `subtotal` DECIMAL(10,2) NOT NULL,
+  `added_at` TIMESTAMP DEFAULT (CURRENT_TIMESTAMP)
+);
 
---
--- Table structure for table `suppliers`
---
+CREATE TABLE `bills` (
+  `bill_id` INT PRIMARY KEY AUTO_INCREMENT,
+  `order_id` INT NOT NULL,
+  `customer_id` INT DEFAULT NULL,
+  `total_amount` DECIMAL(10,2) NOT NULL,
+  `discount_amount` DECIMAL(10,2) DEFAULT NULL,
+  `final_amount` DECIMAL(10,2) NOT NULL,
+  `payment_method` VARCHAR(50) DEFAULT NULL,
+  `status` ENUM('unpaid', 'paid', 'cancelled') DEFAULT 'unpaid',
+  `created_at` TIMESTAMP DEFAULT (CURRENT_TIMESTAMP),
+  `paid_at` TIMESTAMP DEFAULT NULL
+);
 
-DROP TABLE IF EXISTS `suppliers`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `suppliers` (
-  `supplier_id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(100) NOT NULL,
-  `phone` varchar(20) DEFAULT NULL,
-  `email` varchar(100) DEFAULT NULL,
-  `address` text,
-  PRIMARY KEY (`supplier_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
+CREATE UNIQUE INDEX `email` ON `customers` (`email`);
 
---
--- Table structure for table `users`
---
+CREATE UNIQUE INDEX `barcode` ON `products` (`barcode`);
 
-DROP TABLE IF EXISTS `users`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `users` (
-  `user_id` int NOT NULL AUTO_INCREMENT,
-  `username` varchar(50) NOT NULL,
-  `password` varchar(255) NOT NULL,
-  `full_name` varchar(100) DEFAULT NULL,
-  `role` int DEFAULT NULL,
-  `created_at` timestamp NULL DEFAULT (now()),
-  PRIMARY KEY (`user_id`),
-  UNIQUE KEY `username` (`username`),
-  KEY `role` (`role`),
-  CONSTRAINT `users_ibfk_1` FOREIGN KEY (`role`) REFERENCES `roles` (`role_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+CREATE INDEX `fk_products_categories` ON `products` (`category_id`);
 
-/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
-/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
-/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+CREATE INDEX `fk_products_suppliers` ON `products` (`supplier_id`);
 
--- Dump completed on 2025-10-08 19:27:13
+CREATE INDEX `fk_inventory_products` ON `inventory` (`product_id`);
+
+CREATE UNIQUE INDEX `promo_code` ON `promotions` (`promo_code`);
+
+CREATE UNIQUE INDEX `role_name` ON `roles` (`role_name`);
+
+CREATE UNIQUE INDEX `username` ON `users` (`username`);
+
+CREATE INDEX `role` ON `users` (`role`);
+
+CREATE INDEX `fk_orders_customers` ON `orders` (`customer_id`);
+
+CREATE INDEX `fk_orders_users` ON `orders` (`user_id`);
+
+CREATE INDEX `fk_orders_promotions` ON `orders` (`promo_id`);
+
+CREATE INDEX `fk_order_items_orders` ON `order_items` (`order_id`);
+
+CREATE INDEX `fk_order_items_products` ON `order_items` (`product_id`);
+
+CREATE INDEX `fk_payments_orders` ON `payments` (`order_id`);
+
+CREATE UNIQUE INDEX `action_key` ON `permissions` (`action_key`);
+
+CREATE INDEX `permission_id` ON `role_permissions` (`permission_id`);
+
+CREATE INDEX `fk_carts_customers` ON `carts` (`customer_id`);
+
+CREATE INDEX `fk_cart_items_carts` ON `cart_items` (`cart_id`);
+
+CREATE INDEX `fk_cart_items_products` ON `cart_items` (`product_id`);
+
+CREATE INDEX `fk_bills_orders` ON `bills` (`order_id`);
+
+CREATE INDEX `fk_bills_customers` ON `bills` (`customer_id`);
+
+ALTER TABLE `products` ADD CONSTRAINT `fk_products_categories` FOREIGN KEY (`category_id`) REFERENCES `categories` (`category_id`) ON DELETE SET NULL;
+
+ALTER TABLE `products` ADD CONSTRAINT `fk_products_suppliers` FOREIGN KEY (`supplier_id`) REFERENCES `suppliers` (`supplier_id`) ON DELETE SET NULL;
+
+ALTER TABLE `inventory` ADD CONSTRAINT `fk_inventory_products` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE;
+
+ALTER TABLE `users` ADD CONSTRAINT `users_ibfk_1` FOREIGN KEY (`role`) REFERENCES `roles` (`role_id`);
+
+ALTER TABLE `orders` ADD CONSTRAINT `fk_orders_customers` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`customer_id`) ON DELETE SET NULL;
+
+ALTER TABLE `orders` ADD CONSTRAINT `fk_orders_promotions` FOREIGN KEY (`promo_id`) REFERENCES `promotions` (`promo_id`) ON DELETE SET NULL;
+
+ALTER TABLE `orders` ADD CONSTRAINT `fk_orders_users` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE SET NULL;
+
+ALTER TABLE `order_items` ADD CONSTRAINT `fk_order_items_orders` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON DELETE CASCADE;
+
+ALTER TABLE `order_items` ADD CONSTRAINT `fk_order_items_products` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE RESTRICT;
+
+ALTER TABLE `payments` ADD CONSTRAINT `fk_payments_orders` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON DELETE CASCADE;
+
+ALTER TABLE `role_permissions` ADD CONSTRAINT `role_permissions_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `roles` (`role_id`) ON DELETE CASCADE;
+
+ALTER TABLE `role_permissions` ADD CONSTRAINT `role_permissions_ibfk_2` FOREIGN KEY (`permission_id`) REFERENCES `permissions` (`permission_id`) ON DELETE CASCADE;
+
+ALTER TABLE `carts` ADD CONSTRAINT `fk_carts_customers` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`customer_id`) ON DELETE CASCADE;
+
+ALTER TABLE `cart_items` ADD CONSTRAINT `fk_cart_items_carts` FOREIGN KEY (`cart_id`) REFERENCES `carts` (`cart_id`) ON DELETE CASCADE;
+
+ALTER TABLE `cart_items` ADD CONSTRAINT `fk_cart_items_products` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE;
+
+ALTER TABLE `bills` ADD CONSTRAINT `fk_bills_orders` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON DELETE CASCADE;
+
+ALTER TABLE `bills` ADD CONSTRAINT `fk_bills_customers` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`customer_id`) ON DELETE SET NULL;

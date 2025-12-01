@@ -50,6 +50,7 @@ builder.Services.AddControllers()
 
 // 5. Đăng ký các services
 builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<ICustomerAuthService, CustomerAuthService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
@@ -62,19 +63,42 @@ builder.Services.AddScoped<IRoleService, RoleService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
 builder.Services.AddScoped<IRolePermissionService, RolePermissionService>();
 builder.Services.AddScoped<IPromotionService, PromotionService>();
+builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<IBillService, BillService>();
 
-// ✅ 6. Bật CORS cho phép Vue (localhost:5173)
+// ✅ 6. Bật CORS cho phép Vue (localhost:5173), Blazor (localhost:5000, localhost:5001, localhost:5192)
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowVueApp",
         policy => policy
-            .WithOrigins("http://localhost:5173") // địa chỉ Vue chạy
+            .WithOrigins(
+                "http://localhost:5173",  // Vue app
+                "https://localhost:5001", // Blazor HTTPS
+                "http://localhost:5000",  // Blazor HTTP
+                "http://localhost:5192"   // Blazor HTTP (port thực tế)
+            )
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials()); // Cho phép gửi cookie
 });
 
 var app = builder.Build();
+
+// ✅ Tự động tạo database và các bảng khi khởi động lần đầu
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    try
+    {
+        // Đảm bảo database được tạo nếu chưa tồn tại
+        dbContext.Database.EnsureCreated();
+        Console.WriteLine("✅ Database đã được tạo hoặc đã tồn tại.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"❌ Lỗi khi tạo database: {ex.Message}");
+    }
+}
 
 // ✅ 7. Kích hoạt CORS
 app.UseCors("AllowVueApp");
