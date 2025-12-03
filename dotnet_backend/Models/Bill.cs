@@ -8,7 +8,7 @@ public partial class Bill
 
     public int OrderId { get; set; }
 
-    public int CustomerId { get; set; }
+    public int? CustomerId { get; set; }
 
     public decimal TotalAmount { get; set; }
 
@@ -26,5 +26,5 @@ public partial class Bill
 
     public virtual Order Order { get; set; } = null!;
 
-    public virtual Customer Customer { get; set; } = null!;
+    public virtual Customer? Customer { get; set; }
 }

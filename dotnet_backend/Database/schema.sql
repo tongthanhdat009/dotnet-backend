@@ -76,7 +76,8 @@ CREATE TABLE `orders` (
   `order_date` timestamp DEFAULT (now()),
   `status` ENUM ('pending', 'paid', 'canceled') DEFAULT 'pending',
   `total_amount` decimal(10,2) DEFAULT null,
-  `discount_amount` decimal(10,2) DEFAULT '0.00'
+  `discount_amount` decimal(10,2) DEFAULT '0.00',
+  `order_type` ENUM ('online', 'offline') DEFAULT 'offline'
 );
 
 CREATE TABLE `order_items` (
@@ -109,17 +110,9 @@ CREATE TABLE `role_permissions` (
   PRIMARY KEY (`role_id`, `permission_id`)
 );
 
-CREATE TABLE `carts` (
-  `cart_id` INT PRIMARY KEY AUTO_INCREMENT,
-  `customer_id` INT NOT NULL,
-  `created_at` TIMESTAMP DEFAULT (CURRENT_TIMESTAMP),
-  `updated_at` TIMESTAMP DEFAULT (CURRENT_TIMESTAMP)
-);
-
 CREATE TABLE `cart_items` (
-  `cart_item_id` INT PRIMARY KEY AUTO_INCREMENT,
-  `cart_id` INT NOT NULL,
   `product_id` INT NOT NULL,
+  `customer_id` INT NOT NULL,
   `quantity` INT NOT NULL DEFAULT 1,
   `price` DECIMAL(10,2) NOT NULL,
   `subtotal` DECIMAL(10,2) NOT NULL,
@@ -173,11 +166,9 @@ CREATE UNIQUE INDEX `action_key` ON `permissions` (`action_key`);
 
 CREATE INDEX `permission_id` ON `role_permissions` (`permission_id`);
 
-CREATE INDEX `fk_carts_customers` ON `carts` (`customer_id`);
-
-CREATE INDEX `fk_cart_items_carts` ON `cart_items` (`cart_id`);
-
 CREATE INDEX `fk_cart_items_products` ON `cart_items` (`product_id`);
+
+CREATE INDEX `fk_cart_items_customers` ON `cart_items` (`customer_id`);
 
 CREATE INDEX `fk_bills_orders` ON `bills` (`order_id`);
 
@@ -207,12 +198,12 @@ ALTER TABLE `role_permissions` ADD CONSTRAINT `role_permissions_ibfk_1` FOREIGN 
 
 ALTER TABLE `role_permissions` ADD CONSTRAINT `role_permissions_ibfk_2` FOREIGN KEY (`permission_id`) REFERENCES `permissions` (`permission_id`) ON DELETE CASCADE;
 
-ALTER TABLE `carts` ADD CONSTRAINT `fk_carts_customers` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`customer_id`) ON DELETE CASCADE;
-
-ALTER TABLE `cart_items` ADD CONSTRAINT `fk_cart_items_carts` FOREIGN KEY (`cart_id`) REFERENCES `carts` (`cart_id`) ON DELETE CASCADE;
+ALTER TABLE `cart_items` ADD CONSTRAINT `fk_cart_items_customers` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`customer_id`) ON DELETE CASCADE;
 
 ALTER TABLE `cart_items` ADD CONSTRAINT `fk_cart_items_products` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE;
 
 ALTER TABLE `bills` ADD CONSTRAINT `fk_bills_orders` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON DELETE CASCADE;
 
 ALTER TABLE `bills` ADD CONSTRAINT `fk_bills_customers` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`customer_id`) ON DELETE SET NULL;
+
+ALTER TABLE `orders` ADD COLUMN `order_type` ENUM('online', 'offline') DEFAULT 'offline' AFTER `discount_amount`;

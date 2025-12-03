@@ -33,25 +33,6 @@ namespace dotnet_backend.Controllers
         }
 
         /// <summary>
-        /// Lấy giỏ hàng của mình
-        /// GET: api/customer/cart
-        /// </summary>
-        [HttpGet]
-        public async Task<IActionResult> GetMyCart()
-        {
-            try
-            {
-                var customerId = GetCustomerId();
-                var cart = await _cartService.GetCartAsync(customerId);
-                return Ok(cart);
-            }
-            catch (UnauthorizedAccessException ex)
-            {
-                return Unauthorized(new { message = ex.Message });
-            }
-        }
-
-        /// <summary>
         /// Lấy tất cả items trong giỏ hàng
         /// GET: api/customer/cart/items
         /// </summary>
@@ -96,15 +77,16 @@ namespace dotnet_backend.Controllers
 
         /// <summary>
         /// Cập nhật số lượng của item
-        /// PUT: api/customer/cart/items/{cartItemId}
+        /// PUT: api/customer/cart/items/{productId}
         /// Body: { "quantity": 5 }
         /// </summary>
-        [HttpPut("items/{cartItemId}")]
-        public async Task<IActionResult> UpdateItemQuantity(int cartItemId, [FromBody] UpdateQuantityRequest request)
+        [HttpPut("items/{productId}")]
+        public async Task<IActionResult> UpdateItemQuantity(int productId, [FromBody] UpdateQuantityRequest request)
         {
             try
             {
-                var cartItem = await _cartService.UpdateItemQuantityAsync(cartItemId, request.Quantity);
+                var customerId = GetCustomerId();
+                var cartItem = await _cartService.UpdateItemQuantityAsync(customerId, productId, request.Quantity);
                 if (cartItem == null)
                     return NotFound(new { message = "Không tìm thấy item trong giỏ hàng" });
 
@@ -118,16 +100,24 @@ namespace dotnet_backend.Controllers
 
         /// <summary>
         /// Xóa item khỏi giỏ hàng
-        /// DELETE: api/customer/cart/items/{cartItemId}
+        /// DELETE: api/customer/cart/items/{productId}
         /// </summary>
-        [HttpDelete("items/{cartItemId}")]
-        public async Task<IActionResult> RemoveItem(int cartItemId)
+        [HttpDelete("items/{productId}")]
+        public async Task<IActionResult> RemoveItem(int productId)
         {
-            var result = await _cartService.RemoveItemAsync(cartItemId);
-            if (!result)
-                return NotFound(new { message = "Không tìm thấy item trong giỏ hàng" });
+            try
+            {
+                var customerId = GetCustomerId();
+                var result = await _cartService.RemoveItemAsync(customerId, productId);
+                if (!result)
+                    return NotFound(new { message = "Không tìm thấy item trong giỏ hàng" });
 
-            return Ok(new { message = "Đã xóa item khỏi giỏ hàng" });
+                return Ok(new { message = "Đã xóa item khỏi giỏ hàng" });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
         }
 
         /// <summary>

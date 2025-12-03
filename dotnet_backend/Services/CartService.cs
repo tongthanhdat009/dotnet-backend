@@ -19,43 +19,14 @@ namespace dotnet_backend.Services
         }
 
         /// <summary>
-        /// Lấy giỏ hàng của khách hàng, tự động tạo mới nếu chưa có
-        /// </summary>
-        public async Task<Cart?> GetCartAsync(int customerId)
-        {
-            var cart = await _context.Carts
-                .Include(c => c.CartItems)
-                .ThenInclude(ci => ci.Product)
-                .FirstOrDefaultAsync(c => c.CustomerId == customerId);
-
-            // Tự động tạo giỏ hàng mới nếu chưa tồn tại
-            if (cart == null)
-            {
-                cart = new Cart
-                {
-                    CustomerId = customerId,
-                    CreatedAt = DateTime.Now,
-                    UpdatedAt = DateTime.Now
-                };
-                _context.Carts.Add(cart);
-                await _context.SaveChangesAsync();
-            }
-
-            return cart;
-        }
-
-        /// <summary>
         /// Lấy tất cả items trong giỏ hàng của khách hàng
         /// </summary>
         public async Task<List<CartItem>> GetCartItemsAsync(int customerId)
         {
-            var cart = await GetCartAsync(customerId);
-            if (cart == null) return new List<CartItem>();
-
             return await _context.CartItems
                 .Include(ci => ci.Product)
                 .ThenInclude(p => p.Category)
-                .Where(ci => ci.CartId == cart.CartId)
+                .Where(ci => ci.CustomerId == customerId)
                 .ToListAsync();
         }
 
@@ -72,14 +43,9 @@ namespace dotnet_backend.Services
             if (product == null)
                 throw new ArgumentException("Sản phẩm không tồn tại", nameof(productId));
 
-            // Lấy hoặc tạo giỏ hàng
-            var cart = await GetCartAsync(customerId);
-            if (cart == null)
-                throw new Exception("Không thể tạo giỏ hàng");
-
             // Kiểm tra xem sản phẩm đã có trong giỏ hàng chưa
             var existingItem = await _context.CartItems
-                .FirstOrDefaultAsync(ci => ci.CartId == cart.CartId && ci.ProductId == product.ProductId);
+                .FirstOrDefaultAsync(ci => ci.CustomerId == customerId && ci.ProductId == productId);
 
             if (existingItem != null)
             {
@@ -93,8 +59,8 @@ namespace dotnet_backend.Services
                 // Nếu chưa có, thêm mới
                 var newItem = new CartItem
                 {
-                    CartId = cart.CartId,
-                    ProductId = product.ProductId,
+                    CustomerId = customerId,
+                    ProductId = productId,
                     Quantity = quantity,
                     Price = product.Price,
                     Subtotal = quantity * product.Price,
@@ -104,10 +70,6 @@ namespace dotnet_backend.Services
                 existingItem = newItem;
             }
 
-            // Cập nhật thời gian của giỏ hàng
-            cart.UpdatedAt = DateTime.Now;
-            _context.Carts.Update(cart);
-
             await _context.SaveChangesAsync();
             return existingItem;
         }
@@ -115,23 +77,19 @@ namespace dotnet_backend.Services
         /// <summary>
         /// Cập nhật số lượng của một item trong giỏ hàng
         /// </summary>
-        public async Task<CartItem?> UpdateItemQuantityAsync(int cartItemId, int quantity)
+        public async Task<CartItem?> UpdateItemQuantityAsync(int customerId, int productId, int quantity)
         {
             if (quantity <= 0)
                 throw new ArgumentException("Số lượng phải lớn hơn 0", nameof(quantity));
 
             var cartItem = await _context.CartItems
-                .Include(ci => ci.Cart)
-                .FirstOrDefaultAsync(ci => ci.CartItemId == cartItemId);
+                .FirstOrDefaultAsync(ci => ci.CustomerId == customerId && ci.ProductId == productId);
 
             if (cartItem == null)
                 return null;
 
             cartItem.Quantity = quantity;
             cartItem.Subtotal = quantity * cartItem.Price;
-
-            // Cập nhật thời gian giỏ hàng
-            cartItem.Cart.UpdatedAt = DateTime.Now;
 
             _context.CartItems.Update(cartItem);
             await _context.SaveChangesAsync();
@@ -142,18 +100,13 @@ namespace dotnet_backend.Services
         /// <summary>
         /// Xóa một item khỏi giỏ hàng
         /// </summary>
-        public async Task<bool> RemoveItemAsync(int cartItemId)
+        public async Task<bool> RemoveItemAsync(int customerId, int productId)
         {
             var cartItem = await _context.CartItems
-                .Include(ci => ci.Cart)
-                .FirstOrDefaultAsync(ci => ci.CartItemId == cartItemId);
+                .FirstOrDefaultAsync(ci => ci.CustomerId == customerId && ci.ProductId == productId);
 
             if (cartItem == null)
                 return false;
-
-            // Cập nhật thời gian giỏ hàng
-            cartItem.Cart.UpdatedAt = DateTime.Now;
-            _context.Carts.Update(cartItem.Cart);
 
             _context.CartItems.Remove(cartItem);
             await _context.SaveChangesAsync();
@@ -166,17 +119,14 @@ namespace dotnet_backend.Services
         /// </summary>
         public async Task<bool> ClearCartAsync(int customerId)
         {
-            var cart = await _context.Carts
-                .Include(c => c.CartItems)
-                .FirstOrDefaultAsync(c => c.CustomerId == customerId);
+            var cartItems = await _context.CartItems
+                .Where(c => c.CustomerId == customerId)
+                .ToListAsync();
 
-            if (cart == null)
+            if (!cartItems.Any())
                 return false;
 
-            _context.CartItems.RemoveRange(cart.CartItems);
-            cart.UpdatedAt = DateTime.Now;
-            _context.Carts.Update(cart);
-
+            _context.CartItems.RemoveRange(cartItems);
             await _context.SaveChangesAsync();
             return true;
         }
@@ -186,11 +136,8 @@ namespace dotnet_backend.Services
         /// </summary>
         public async Task<decimal> GetCartTotalAsync(int customerId)
         {
-            var cart = await GetCartAsync(customerId);
-            if (cart == null) return 0;
-
             var total = await _context.CartItems
-                .Where(ci => ci.CartId == cart.CartId)
+                .Where(ci => ci.CustomerId == customerId)
                 .SumAsync(ci => ci.Subtotal);
 
             return total;
@@ -201,12 +148,9 @@ namespace dotnet_backend.Services
         /// </summary>
         public async Task<CartItem?> GetCartItemByProductAsync(int customerId, int productId)
         {
-            var cart = await GetCartAsync(customerId);
-            if (cart == null) return null;
-
             return await _context.CartItems
                 .Include(ci => ci.Product)
-                .FirstOrDefaultAsync(ci => ci.CartId == cart.CartId && ci.ProductId == productId);
+                .FirstOrDefaultAsync(ci => ci.CustomerId == customerId && ci.ProductId == productId);
         }
     }
 }

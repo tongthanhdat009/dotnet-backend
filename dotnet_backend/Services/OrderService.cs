@@ -53,6 +53,7 @@ public class OrderService : IOrderService
                 TotalAmount = o.TotalAmount,
                 DiscountAmount = o.DiscountAmount,
                 Status = o.Status,
+                OrderType = o.OrderType,
 
                 Customer = o.Customer == null ? null : new CustomerDto
                 {
@@ -110,6 +111,7 @@ public class OrderService : IOrderService
                 TotalAmount = o.TotalAmount,
                 DiscountAmount = o.DiscountAmount,
                 Status = o.Status,
+                OrderType = o.OrderType,
 
                 Customer = o.Customer == null ? null : new CustomerDto
                 {
@@ -253,6 +255,7 @@ public class OrderService : IOrderService
             TotalAmount = order.TotalAmount,
             DiscountAmount = order.DiscountAmount,
             Status = order.Status,
+            OrderType = order.OrderType,
 
             Customer = order.Customer == null ? null : new CustomerDto
             {
@@ -435,6 +438,7 @@ public class OrderService : IOrderService
             TotalAmount = orderDto.TotalAmount,
             DiscountAmount = orderDto.DiscountAmount,
             Status = "pending",
+            OrderType = orderDto.OrderType ?? "offline",
             OrderItems = orderDto.OrderItems.Select(oi => new OrderItem
             {
                 ProductId = oi.ProductId,

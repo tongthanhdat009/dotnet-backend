@@ -17,20 +17,6 @@ namespace dotnet_backend.Controllers
         }
 
         /// <summary>
-        /// Lấy giỏ hàng của khách hàng
-        /// GET: api/cart/{customerId}
-        /// </summary>
-        [HttpGet("{customerId}")]
-        public async Task<IActionResult> GetCart(int customerId)
-        {
-            var cart = await _cartService.GetCartAsync(customerId);
-            if (cart == null)
-                return NotFound(new { message = "Không tìm thấy giỏ hàng" });
-
-            return Ok(cart);
-        }
-
-        /// <summary>
         /// Lấy tất cả items trong giỏ hàng
         /// GET: api/cart/{customerId}/items
         /// </summary>
@@ -62,15 +48,15 @@ namespace dotnet_backend.Controllers
 
         /// <summary>
         /// Cập nhật số lượng của item
-        /// PUT: api/cart/items/{cartItemId}
+        /// PUT: api/cart/{customerId}/items/{productId}
         /// Body: { "quantity": 5 }
         /// </summary>
-        [HttpPut("items/{cartItemId}")]
-        public async Task<IActionResult> UpdateItemQuantity(int cartItemId, [FromBody] UpdateQuantityRequest request)
+        [HttpPut("{customerId}/items/{productId}")]
+        public async Task<IActionResult> UpdateItemQuantity(int customerId, int productId, [FromBody] UpdateQuantityRequest request)
         {
             try
             {
-                var cartItem = await _cartService.UpdateItemQuantityAsync(cartItemId, request.Quantity);
+                var cartItem = await _cartService.UpdateItemQuantityAsync(customerId, productId, request.Quantity);
                 if (cartItem == null)
                     return NotFound(new { message = "Không tìm thấy item trong giỏ hàng" });
 
@@ -84,12 +70,12 @@ namespace dotnet_backend.Controllers
 
         /// <summary>
         /// Xóa item khỏi giỏ hàng
-        /// DELETE: api/cart/items/{cartItemId}
+        /// DELETE: api/cart/{customerId}/items/{productId}
         /// </summary>
-        [HttpDelete("items/{cartItemId}")]
-        public async Task<IActionResult> RemoveItem(int cartItemId)
+        [HttpDelete("{customerId}/items/{productId}")]
+        public async Task<IActionResult> RemoveItem(int customerId, int productId)
         {
-            var result = await _cartService.RemoveItemAsync(cartItemId);
+            var result = await _cartService.RemoveItemAsync(customerId, productId);
             if (!result)
                 return NotFound(new { message = "Không tìm thấy item trong giỏ hàng" });
 

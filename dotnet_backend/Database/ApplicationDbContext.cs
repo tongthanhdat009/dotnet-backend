@@ -43,8 +43,6 @@ public partial class ApplicationDbContext : DbContext
 
     public virtual DbSet<RolePermission> RolePermissions { get; set; }
 
-    public virtual DbSet<Cart> Carts { get; set; }
-
     public virtual DbSet<CartItem> CartItems { get; set; }
 
     public virtual DbSet<Bill> Bills { get; set; }
@@ -146,6 +144,10 @@ public partial class ApplicationDbContext : DbContext
                 .HasPrecision(10, 2)
                 .HasColumnName("total_amount");
             entity.Property(e => e.UserId).HasColumnName("user_id");
+            entity.Property(e => e.OrderType)
+                .HasDefaultValueSql("'offline'")
+                .HasColumnType("enum('online','offline')")
+                .HasColumnName("order_type");
 
             entity.HasOne(d => d.Customer).WithMany(p => p.Orders)
                 .HasForeignKey(d => d.CustomerId)
@@ -414,43 +416,18 @@ public partial class ApplicationDbContext : DbContext
                 .HasConstraintName("users_ibfk_1");
         });
 
-        modelBuilder.Entity<Cart>(entity =>
-        {
-            entity.HasKey(e => e.CartId).HasName("PRIMARY");
-
-            entity.ToTable("carts");
-
-            entity.HasIndex(e => e.CustomerId, "fk_carts_customers");
-
-            entity.Property(e => e.CartId).HasColumnName("cart_id");
-            entity.Property(e => e.CustomerId).HasColumnName("customer_id");
-            entity.Property(e => e.CreatedAt)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnType("timestamp")
-                .HasColumnName("created_at");
-            entity.Property(e => e.UpdatedAt)
-                .HasDefaultValueSql("CURRENT_TIMESTAMP")
-                .HasColumnType("timestamp")
-                .HasColumnName("updated_at");
-
-            entity.HasOne(d => d.Customer).WithMany(p => p.Carts)
-                .HasForeignKey(d => d.CustomerId)
-                .HasConstraintName("fk_carts_customers");
-        });
-
         modelBuilder.Entity<CartItem>(entity =>
         {
-            entity.HasKey(e => e.CartItemId).HasName("PRIMARY");
+            entity.HasKey(e => new { e.ProductId, e.CustomerId }).HasName("PRIMARY");
 
             entity.ToTable("cart_items");
 
-            entity.HasIndex(e => e.CartId, "fk_cart_items_carts");
+            entity.HasIndex(e => e.CustomerId, "fk_cart_items_customers");
 
             entity.HasIndex(e => e.ProductId, "fk_cart_items_products");
 
-            entity.Property(e => e.CartItemId).HasColumnName("cart_item_id");
-            entity.Property(e => e.CartId).HasColumnName("cart_id");
             entity.Property(e => e.ProductId).HasColumnName("product_id");
+            entity.Property(e => e.CustomerId).HasColumnName("customer_id");
             entity.Property(e => e.Quantity)
                 .HasDefaultValue(1)
                 .HasColumnName("quantity");
@@ -465,9 +442,9 @@ public partial class ApplicationDbContext : DbContext
                 .HasColumnType("timestamp")
                 .HasColumnName("added_at");
 
-            entity.HasOne(d => d.Cart).WithMany(p => p.CartItems)
-                .HasForeignKey(d => d.CartId)
-                .HasConstraintName("fk_cart_items_carts");
+            entity.HasOne(d => d.Customer).WithMany(p => p.CartItems)
+                .HasForeignKey(d => d.CustomerId)
+                .HasConstraintName("fk_cart_items_customers");
 
             entity.HasOne(d => d.Product).WithMany(p => p.CartItems)
                 .HasForeignKey(d => d.ProductId)

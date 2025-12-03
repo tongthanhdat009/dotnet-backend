@@ -21,7 +21,7 @@ public partial class Customer
 
     public virtual ICollection<Order> Orders { get; set; } = new List<Order>();
 
-    public virtual ICollection<Cart> Carts { get; set; } = new List<Cart>();
+    public virtual ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
 
     public virtual ICollection<Bill> Bills { get; set; } = new List<Bill>();
 }

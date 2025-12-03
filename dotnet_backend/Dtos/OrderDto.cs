@@ -18,6 +18,8 @@ public class OrderDto
 
     public decimal? DiscountAmount { get; set; }
 
+    public string? OrderType { get; set; }
+
     public virtual CustomerDto? Customer { get; set; }
 
     public virtual ICollection<OrderItemDto> OrderItems { get; set; } = new List<OrderItemDto>();

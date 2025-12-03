@@ -6,9 +6,6 @@ namespace dotnet_backend.Services.Interface
 {
     public interface ICartService
     {
-        // Lấy giỏ hàng của khách hàng
-        Task<Cart?> GetCartAsync(int customerId);
-
         // Lấy tất cả items trong giỏ hàng
         Task<List<CartItem>> GetCartItemsAsync(int customerId);
 
@@ -16,10 +13,10 @@ namespace dotnet_backend.Services.Interface
         Task<CartItem> AddItemAsync(int customerId, int productId, int quantity = 1);
 
         // Cập nhật số lượng của item trong giỏ hàng
-        Task<CartItem?> UpdateItemQuantityAsync(int cartItemId, int quantity);
+        Task<CartItem?> UpdateItemQuantityAsync(int customerId, int productId, int quantity);
 
         // Xóa một item khỏi giỏ hàng
-        Task<bool> RemoveItemAsync(int cartItemId);
+        Task<bool> RemoveItemAsync(int customerId, int productId);
 
         // Xóa toàn bộ giỏ hàng
         Task<bool> ClearCartAsync(int customerId);
