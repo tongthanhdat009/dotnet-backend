@@ -14,11 +14,14 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 // 2. Đăng ký DbContext với timeout 600 giây
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
+{
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
     options.UseMySql(
-        connectionString, 
-        ServerVersion.AutoDetect(connectionString),
-        mySqlOptions => mySqlOptions.CommandTimeout(600) // Timeout 10 phút
-    ));
+        connectionString,
+        new MySqlServerVersion(new Version(10, 4, 0)) // MariaDB 10.4
+    );
+});
+
 
 // 3. 🔐 Cấu hình JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("Jwt");
