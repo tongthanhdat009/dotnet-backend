@@ -4,7 +4,8 @@ namespace dotnet_backend.Services.Interface;
 
 public interface IOrderService
 {
-    Task<IEnumerable<OrderDto>> GetAllOrdersAsync();
+    Task<IEnumerable<OrderDto>> GetOrdersOfflineAsync();
+    Task<IEnumerable<OrderDto>> GetOrdersOnlineAsync();
     Task<OrderDto> GetOrderByIdAsync(int id);
     Task<IEnumerable<OrderDto>> GetOrdersByCustomerIdAsync(int customerId);
     Task<int> GetTotalOrdersAsync();

@@ -21,10 +21,17 @@ public class OrderController : ControllerBase
         _customerService = customerService;
     }
 
-    [HttpGet]
-    public async Task<IActionResult> GetOrders()
+    [HttpGet("offline")]
+    public async Task<IActionResult> GetOrdersOffline()
     {
-        var orders = await _orderService.GetAllOrdersAsync();
+        var orders = await _orderService.GetOrdersOfflineAsync();
+        return Ok(orders);
+    }
+
+    [HttpGet("online")]
+    public async Task<IActionResult> GetOrdersOnline()
+    {
+        var orders = await _orderService.GetOrdersOnlineAsync();
         return Ok(orders);
     }
 
