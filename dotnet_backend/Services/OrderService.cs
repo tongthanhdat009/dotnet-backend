@@ -199,6 +199,102 @@ public class OrderService : IOrderService
             .ToListAsync();
     }
 
+    public async Task<int> UpdateOrderAndBillStatusAsync(int orderId, string statusOrder, string statusBill)
+    {
+        using var transaction = await _context.Database.BeginTransactionAsync();
+
+        try
+        {
+            // Cập nhật trạng thái ORDER
+            var order = await _context.Orders
+                .FirstOrDefaultAsync(o => o.OrderId == orderId);
+
+            if (order == null)
+                throw new Exception("Không tìm thấy đơn hàng");
+
+            order.Status = statusOrder;
+
+            // Cập nhật trạng thái BILL
+            var bill = await _context.Bills
+                .FirstOrDefaultAsync(b => b.OrderId == orderId);
+
+            if (bill == null)
+                throw new Exception("Không tìm thấy hóa đơn");
+
+            bill.Status = statusBill;
+
+            if (statusBill == "paid")
+            {
+                bill.PaidAt = DateTime.Now;
+            }
+
+            // Lưu thay đổi
+            int result = await _context.SaveChangesAsync();
+
+            // Commit transaction
+            await transaction.CommitAsync();
+
+            return result; // số dòng bị ảnh hưởng
+        }
+        catch
+        {
+            await transaction.RollbackAsync();
+            throw;
+        }
+    }
+
+    public async Task<IEnumerable<OrderDto>> GetOnlineOrdersByCustomerIdAsync(int customerId)
+    {
+        return await _context.Orders
+            .Where(o => o.CustomerId == customerId && o.OrderType == "online")
+            .OrderByDescending(o => o.OrderDate)
+            .Include(o => o.Customer)
+            .Include(o => o.Payments)
+            .Include(o => o.User)
+            .Select(o => new OrderDto
+            {
+                OrderId = o.OrderId,
+                CustomerId = o.CustomerId,
+                UserId = o.UserId,
+                PromoId = o.PromoId,
+                OrderDate = o.OrderDate,
+                TotalAmount = o.TotalAmount,
+                DiscountAmount = o.DiscountAmount,
+                Status = o.Status,
+                OrderType = o.OrderType,
+
+                Customer = o.Customer == null ? null : new CustomerDto
+                {
+                    CustomerId = o.Customer.CustomerId,
+                    Name = o.Customer.Name,
+                    Email = o.Customer.Email,
+                    Phone = o.Customer.Phone,
+                    Address = o.Customer.Address,
+                    CreatedAt = o.Customer.CreatedAt
+                },
+
+                Payments = o.Payments.Select(p => new PaymentDto
+                {
+                    PaymentId = p.PaymentId,
+                    OrderId = p.OrderId,
+                    Amount = p.Amount,
+                    PaymentMethod = p.PaymentMethod ?? "",
+                    PaymentDate = p.PaymentDate ?? DateTime.MinValue
+                }).ToList(),
+
+                User = o.User == null ? null : new UserDto
+                {
+                    UserId = o.User.UserId,
+                    Username = o.User.Username,
+                    Password = "",
+                    FullName = o.User.FullName,
+                    Role = o.User.Role,
+                    CreatedAt = o.User.CreatedAt
+                }
+            })
+            .ToListAsync();
+    }
+
     public async Task<IEnumerable<PeakTimeDto>> GetPeakTimeStatsAsync()
     {
         var result = await _context.Orders
@@ -228,6 +324,7 @@ public class OrderService : IOrderService
     {
         return await _context.Orders.CountAsync();
     }
+
 
     public async Task<IEnumerable<OrderByMonthDto>> GetOrdersByYearAsync(int year)
     {
