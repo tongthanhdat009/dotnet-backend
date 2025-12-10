@@ -17,11 +17,13 @@ namespace dotnet_backend.Controllers
     public class CustomerOrderController : ControllerBase
     {
         private readonly IOrderService _orderService;
+        private readonly IOrderItemService _orderItemService;
         private readonly ICartService _cartService;
 
-        public CustomerOrderController(IOrderService orderService, ICartService cartService)
+        public CustomerOrderController(IOrderService orderService, IOrderItemService orderItemService, ICartService cartService)
         {
             _orderService = orderService;
+            _orderItemService = orderItemService;
             _cartService = cartService;
         }
 
@@ -136,6 +138,27 @@ namespace dotnet_backend.Controllers
         }
 
         /// <summary>
+        /// Lấy chi tiết đơn hàng
+        /// GET: api/customer/orders/{orderId}/orderitem-with-product
+        /// </summary>
+        [HttpGet("{orderId}/orderitem-with-product")]
+        public async Task<IActionResult> GetOrderItemWithProduct(int orderId)
+        {
+            try
+            {
+                var orderItemWithProducts = await _orderItemService.GetOrderItemsWithProductsAsync(orderId);
+                if (orderItemWithProducts == null)
+                    return NotFound(new { message = "Không tìm thấy chi tiết đơn hàng" });
+                return Ok(orderItemWithProducts);
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+        }
+
+
+        /// <summary>
         /// Hủy đơn hàng (chỉ hủy được khi status = pending)
         /// POST: api/customer/orders/{orderId}/cancel
         /// </summary>
@@ -192,7 +215,28 @@ namespace dotnet_backend.Controllers
                 return Unauthorized(new { message = ex.Message });
             }
         }
+
+        [HttpGet("online-orders-by-customer/{customerId}")]
+        public async Task<IActionResult> GetOnlineOrdersByCustomerId(int customerId)
+        {
+            var onlineOrdersByCustomer = await _orderService.GetOnlineOrdersByCustomerIdAsync(customerId);
+            return Ok(onlineOrdersByCustomer);
+        }
+
+        [HttpPost("update-order-and-bill-status")]
+        public async Task<IActionResult> UpdateOrderAndBillStatus(
+            [FromBody] UpdateOrderAndBillStatusDto request)
+        {
+            var result = await _orderService.UpdateOrderAndBillStatusAsync(
+                request.OrderId,
+                request.StatusOrder,
+                request.StatusBill
+            );
+
+            return Ok(result);
+        }
     }
+
 
     // Request model
     public class CreateOrderFromCartRequest

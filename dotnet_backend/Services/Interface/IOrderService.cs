@@ -1,5 +1,6 @@
 using dotnet_backend.Services;
 using dotnet_backend.Dtos;
+using System.Threading.Tasks;
 namespace dotnet_backend.Services.Interface;
 
 public interface IOrderService
@@ -8,8 +9,10 @@ public interface IOrderService
     Task<OrderDto> GetOrderByIdAsync(int id);
     Task<IEnumerable<OrderDto>> GetOrdersByCustomerIdAsync(int customerId);
     Task<int> GetTotalOrdersAsync();
+    Task<int> UpdateOrderAndBillStatusAsync(int orderId, string statusOrder, string statusBill);
     Task<IEnumerable<OrderByMonthDto>> GetOrdersByYearAsync(int year);
     Task<IEnumerable<SalesByMonthDto>> GetSalesByYearAsync(int year);
+    Task<IEnumerable<OrderDto>> GetOnlineOrdersByCustomerIdAsync(int customerId);
     Task<IEnumerable<PeakTimeDto>> GetPeakTimeStatsAsync();
     Task<bool> CancelOrderAsync(int orderId);
     Task<OrderDto> CreateOrderAsync(OrderDto orderDto);
