@@ -49,6 +49,8 @@ builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.PropertyNamingPolicy = null;
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.WriteIndented = true; // dễ debug
     });
 
 // 5. Đăng ký các services
@@ -68,6 +70,9 @@ builder.Services.AddScoped<IRolePermissionService, RolePermissionService>();
 builder.Services.AddScoped<IPromotionService, PromotionService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IBillService, BillService>();
+builder.Services.AddScoped<PromotionService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+
 
 // ✅ 6. Bật CORS cho phép Vue (localhost:5173), Blazor (localhost:5000, localhost:5001, localhost:5192)
 builder.Services.AddCors(options =>

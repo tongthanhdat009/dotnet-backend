@@ -7,15 +7,21 @@ using dotnet_backend.Dtos;
 using dotnet_backend.Services.Interface;
 using dotnet_backend.Database;
 using dotnet_backend.Models;
+using dotnet_backend.Controllers; 
+
 namespace dotnet_backend.Services;
 
 public class OrderService : IOrderService
 {
     private readonly ApplicationDbContext _context;
-    public OrderService(ApplicationDbContext context)
+    private readonly PromotionService _promotionService;
+
+    public OrderService(ApplicationDbContext context, PromotionService promotionService)
     {
         _context = context;
+        _promotionService = promotionService;
     }
+
     public async Task<IEnumerable<PromotionDto>> GetAllPromosAsync()
     {
         return await _context.Promotions
@@ -250,10 +256,10 @@ public class OrderService : IOrderService
             OrderId = order.OrderId,
             CustomerId = order.CustomerId,
             UserId = order.UserId,
-            PromoId = order.PromoId,
+            PromoId = order.PromoId,          // <- thêm
             OrderDate = order.OrderDate,
-            TotalAmount = order.TotalAmount,
-            DiscountAmount = order.DiscountAmount,
+            TotalAmount = order.TotalAmount,  // <- thêm
+            DiscountAmount = order.DiscountAmount, // <- thêm
             Status = order.Status,
             OrderType = order.OrderType,
 
@@ -308,6 +314,7 @@ public class OrderService : IOrderService
             }).ToList()
         };
     }
+
 
     public async Task<bool> CancelOrderAsync(int orderId)
     {
@@ -450,5 +457,241 @@ public class OrderService : IOrderService
         _context.Orders.Add(order);
         await _context.SaveChangesAsync();
         return await GetOrderByIdAsync(order.OrderId);
+    }
+    // Implement interface
+    public async Task<OrderDto> PreviewOrderFromCartAsync(int customerId, int? promoId = null, string paymentMethod = "cash")
+    {
+        // Build order DTO from current cart without persisting or modifying DB
+        // 1. Lấy giỏ hàng
+        var cartItems = await _context.CartItems
+            .Include(ci => ci.Product)
+            .Where(ci => ci.CustomerId == customerId)
+            .ToListAsync();
+
+        if (!cartItems.Any())
+            throw new ArgumentException("Giỏ hàng trống.");
+
+        // 2. Kiểm tra tồn kho (chỉ kiểm tra, không thay đổi)
+        foreach (var ci in cartItems)
+        {
+            var inv = await _context.Inventories.FirstOrDefaultAsync(i => i.ProductId == ci.ProductId);
+            if (inv == null) throw new Exception($"Không tìm thấy tồn kho cho sản phẩm {ci.Product.ProductName}");
+            if (inv.Quantity < ci.Quantity) throw new Exception($"Sản phẩm {ci.Product.ProductName} chỉ còn {inv.Quantity} trong kho.");
+        }
+
+        // 3. Tạo OrderItems
+        var orderItems = cartItems.Select(ci => new OrderItemDto
+        {
+            ProductId = ci.ProductId,
+            Quantity = ci.Quantity,
+            Price = ci.Price,
+            Subtotal = ci.Subtotal,
+            Product = ci.Product == null ? null : new ProductDto
+            {
+                ProductId = ci.Product.ProductId,
+                ProductName = ci.Product.ProductName,
+                Price = ci.Product.Price
+            }
+        }).ToList();
+
+        var total = orderItems.Sum(x => x.Subtotal);
+
+        // 4. Tính discount nếu có
+        decimal discount = 0;
+        int? appliedPromoId = null;
+        if (promoId.HasValue)
+        {
+            var promoResp = await _promotionService.ValidatePromoAsync(promoId.Value, total);
+            discount = promoResp.DiscountAmount;
+            appliedPromoId = promoResp.PromoId;
+        }
+
+        // 5. Build OrderDto
+        var orderDto = new OrderDto
+        {
+            CustomerId = customerId,
+            PromoId = appliedPromoId,
+            OrderDate = DateTime.Now,
+            TotalAmount = total,
+            DiscountAmount = discount,
+            Status = "pending",
+            OrderItems = orderItems
+        };
+
+        return orderDto;
+    }
+
+    public async Task<OrderDto> CheckoutFromCartAsync(int customerId, int? userId = null, int? promoId = null)
+    {
+        string? promoCode = null;
+
+        if (promoId.HasValue)
+        {
+            var promo = await _context.Promotions.FindAsync(promoId.Value);
+            promoCode = promo?.PromoCode;
+        }
+
+        return await CheckoutFromCartInternalAsync(customerId, userId, promoCode, "cash");
+    }
+
+    
+    // OrderService
+    public async Task<OrderDto> CheckoutFromCartAsync(CheckoutDto checkout)
+    {
+        if (checkout == null) throw new ArgumentNullException(nameof(checkout));
+
+        return await CheckoutFromCartInternalAsync(
+            checkout.CustomerId,
+            null,
+            checkout.PromoCode,
+            checkout.PaymentMethod ?? "cash"
+        );
+    }
+
+    // Nếu muốn dùng từ backend theo CustomerId, UserId
+    public async Task<OrderDto> CheckoutFromCartAsync(int customerId, int? userId, string? promoCode, string paymentMethod = "cash")
+    {
+        return await CheckoutFromCartInternalAsync(customerId, userId, promoCode, paymentMethod);
+    }
+
+    // Hàm private xử lý chung
+    private async Task<OrderDto> CheckoutFromCartInternalAsync(
+        int customerId,
+        int? userId,
+        string? promoCode,
+        string paymentMethod)
+    {
+        await using var tx = await _context.Database.BeginTransactionAsync();
+
+        try
+        {
+            // 1. Lấy giỏ hàng
+            var cartItems = await _context.CartItems
+                .Include(ci => ci.Product)
+                .Where(ci => ci.CustomerId == customerId)
+                .ToListAsync();
+
+            if (!cartItems.Any())
+                throw new ArgumentException("Giỏ hàng trống.");
+
+            // 2. Kiểm tra tồn kho
+            foreach (var ci in cartItems)
+            {
+                var inv = await _context.Inventories.FirstOrDefaultAsync(i => i.ProductId == ci.ProductId);
+                if (inv == null) throw new Exception($"Không tìm thấy tồn kho cho sản phẩm {ci.Product.ProductName}");
+                if (inv.Quantity < ci.Quantity) throw new Exception($"Sản phẩm {ci.Product.ProductName} chỉ còn {inv.Quantity} trong kho.");
+            }
+
+            // 3. Tạo OrderItems
+            var orderItems = cartItems.Select(ci => new OrderItem
+            {
+                ProductId = ci.ProductId,
+                Quantity = ci.Quantity,
+                Price = ci.Price,
+                Subtotal = ci.Subtotal
+            }).ToList();
+
+            var total = orderItems.Sum(x => x.Subtotal);
+
+            // 4. Tính discount
+            decimal discount = 0;
+            int? appliedPromoId = null;
+
+            if (!string.IsNullOrWhiteSpace(promoCode))
+            {
+                var promoResponse = await _promotionService.ValidatePromoByCodeAsync(promoCode, total);
+                discount = promoResponse.DiscountAmount;
+                appliedPromoId = promoResponse.PromoId;
+
+                if (appliedPromoId.HasValue)
+                {
+                    var promo = await _context.Promotions.FindAsync(appliedPromoId.Value);
+                    if (promo != null)
+                    {
+                        promo.UsedCount = (promo.UsedCount ?? 0) + 1;
+                        _context.Promotions.Update(promo);
+                    }
+                }
+            }
+
+            var finalTotal = total - discount;
+
+            // 5. Tạo Order
+            var order = new Order
+            {
+                CustomerId     = customerId,
+                UserId         = userId,
+                PromoId        = appliedPromoId,
+                OrderDate      = DateTime.Now,
+                TotalAmount    = total,
+                DiscountAmount = discount,
+                Status         = "pending",
+                OrderItems     = orderItems,
+                OrderType      = "offline"
+            };
+            _context.Orders.Add(order);
+            await _context.SaveChangesAsync();
+
+            // 6. Tạo Payment
+            var payment = new Payment
+            {
+                OrderId       = order.OrderId,
+                Amount        = finalTotal,
+                PaymentMethod = paymentMethod,
+                PaymentDate   = DateTime.Now
+            };
+            _context.Payments.Add(payment);
+            // 7. Tạo Bill
+            var bill = new Bill
+            {
+                OrderId        = order.OrderId,
+                CustomerId     = customerId,
+                TotalAmount    = total,
+                DiscountAmount = discount,
+                FinalAmount    = finalTotal,
+                PaymentMethod  = paymentMethod,
+                Status         = "unpaid",
+                CreatedAt      = DateTime.Now
+            };
+
+            // If payment method is immediate (cash or e-wallet), mark order and bill as paid now
+            var method = (paymentMethod ?? "").ToLower();
+            if (method == "cash" || method == "e-wallet")
+            {
+                order.Status = "paid";
+                bill.Status = "paid";
+                bill.PaidAt = DateTime.Now;
+                // also set payment date if not set
+                payment.PaymentDate = DateTime.Now;
+            }
+
+            _context.Bills.Add(bill);
+
+            // 8. Cập nhật tồn kho
+            foreach (var ci in cartItems)
+            {
+                var inv = await _context.Inventories.FirstOrDefaultAsync(i => i.ProductId == ci.ProductId);
+                if (inv != null)
+                {
+                    inv.Quantity -= ci.Quantity;
+                    _context.Inventories.Update(inv);
+                }
+            }
+
+            // 9. Xóa cart items
+            _context.CartItems.RemoveRange(cartItems);
+
+            // 10. Lưu tất cả thay đổi
+            await _context.SaveChangesAsync();
+            await tx.CommitAsync();
+
+            return await GetOrderByIdAsync(order.OrderId);
+        }
+        catch (Exception ex)
+        {
+            await tx.RollbackAsync();
+            Console.WriteLine($"[ERROR] Checkout failed: {ex.Message}");
+            throw;
+        }
     }
 }

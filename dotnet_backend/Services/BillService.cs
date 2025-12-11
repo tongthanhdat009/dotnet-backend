@@ -47,7 +47,7 @@ namespace dotnet_backend.Services
                 TotalAmount = order.TotalAmount ?? 0,
                 DiscountAmount = order.DiscountAmount ?? 0,
                 FinalAmount = (order.TotalAmount ?? 0) - (order.DiscountAmount ?? 0),
-                Status = "unpaid",
+                Status = "paid",
                 CreatedAt = DateTime.Now
             };
 

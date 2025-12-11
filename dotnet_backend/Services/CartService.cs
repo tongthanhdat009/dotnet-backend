@@ -71,7 +71,16 @@ namespace dotnet_backend.Services
             }
 
             await _context.SaveChangesAsync();
-            return existingItem;
+
+            // Load lại Product để trả về đầy đủ thông tin
+            return await _context.CartItems
+            .Include(ci => ci.Product)
+            .ThenInclude(p => p.Category)
+            .FirstOrDefaultAsync(ci =>
+                ci.CustomerId == existingItem.CustomerId &&
+                ci.ProductId == existingItem.ProductId
+    );
+
         }
 
         /// <summary>

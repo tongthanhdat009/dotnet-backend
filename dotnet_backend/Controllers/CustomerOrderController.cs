@@ -18,16 +18,19 @@ namespace dotnet_backend.Controllers
     {
         private readonly IOrderService _orderService;
         private readonly ICartService _cartService;
+        private readonly IPaymentService _paymentService;
 
-        public CustomerOrderController(IOrderService orderService, ICartService cartService)
+
+         public CustomerOrderController(
+            IOrderService orderService,
+            ICartService cartService,
+            IPaymentService paymentService)
         {
             _orderService = orderService;
             _cartService = cartService;
+            _paymentService = paymentService;
         }
 
-        /// <summary>
-        /// Lấy customerId từ JWT token
-        /// </summary>
         private int GetCustomerId()
         {
             var customerIdClaim = User.FindFirst("customer_id")?.Value;
@@ -36,27 +39,23 @@ namespace dotnet_backend.Controllers
             return customerId;
         }
 
-        /// <summary>
-        /// Tạo đơn hàng từ giỏ hàng
-        /// POST: api/customer/orders/create-from-cart
-        /// Body: { "promoCode": "SUMMER2024" } // optional
-        /// </summary>
         [HttpPost("create-from-cart")]
         public async Task<IActionResult> CreateOrderFromCart([FromBody] CreateOrderFromCartRequest? request)
         {
             try
             {
                 var customerId = GetCustomerId();
-                
-                // Lấy items từ giỏ hàng
                 var cartItems = await _cartService.GetCartItemsAsync(customerId);
                 if (cartItems == null || cartItems.Count == 0)
                     return BadRequest(new { message = "Giỏ hàng trống" });
 
-                // Tạo order items
                 var orderItems = new List<OrderItemDto>();
                 foreach (var item in cartItems)
                 {
+                    if (item.ProductId <= 0) return BadRequest(new { message = $"ProductId không hợp lệ: {item.ProductId}" });
+                    if (item.Quantity <= 0) return BadRequest(new { message = $"Số lượng không hợp lệ cho productId {item.ProductId}" });
+                    if (item.Price < 0) return BadRequest(new { message = $"Price không hợp lệ cho productId {item.ProductId}" });
+
                     orderItems.Add(new OrderItemDto
                     {
                         ProductId = item.ProductId,
@@ -65,16 +64,14 @@ namespace dotnet_backend.Controllers
                     });
                 }
 
-                // Tạo order
                 var orderDto = new OrderDto
                 {
                     CustomerId = customerId,
-                    OrderItems = orderItems
+                    OrderItems = orderItems,
+                    PromoId = request.PromoId
                 };
 
                 var order = await _orderService.CreateOrderAsync(orderDto);
-
-                // Xóa giỏ hàng sau khi đặt hàng thành công
                 await _cartService.ClearCartAsync(customerId);
 
                 return Ok(new { message = "Đặt hàng thành công", data = order });
@@ -88,6 +85,28 @@ namespace dotnet_backend.Controllers
                 return BadRequest(new { message = ex.Message });
             }
         }
+
+        [HttpPost("preview")]
+        public async Task<IActionResult> PreviewOrderFromCart([FromBody] CreateOrderFromCartRequest? request)
+        {
+            try
+            {
+                var customerId = GetCustomerId();
+                request ??= new CreateOrderFromCartRequest();
+                var order = await _orderService.PreviewOrderFromCartAsync(customerId, request.PromoId, request.PaymentMethod ?? "cash");
+                return Ok(new { message = "Preview created", data = order });
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+
 
         /// <summary>
         /// Lấy danh sách đơn hàng của mình
@@ -192,11 +211,97 @@ namespace dotnet_backend.Controllers
                 return Unauthorized(new { message = ex.Message });
             }
         }
+    
+
+        /// <summary>
+        /// Thanh toán toàn bộ giỏ hàng (tạo order và trả về orderDto)
+        /// POST: api/customer/orders/checkout
+        /// Body: { "promoCode": "SUMMER2024" } // optional
+        /// </summary>
+        [HttpPost("checkout")]
+        public async Task<IActionResult> Checkout([FromBody] CheckoutDto? request)
+        {
+            try
+            {
+                var customerId = GetCustomerId();
+
+                // Gán customerId từ JWT token vào request
+                request ??= new CheckoutDto();
+                request.CustomerId = customerId;
+
+                OrderDto order;
+                // If frontend sent PromoId instead of PromoCode, use overload that accepts promoId
+                if (request.PromoId.HasValue)
+                {
+                    order = await _orderService.CheckoutFromCartAsync(customerId, null, request.PromoId);
+                }
+                else
+                {
+                    order = await _orderService.CheckoutFromCartAsync(request);
+                }
+
+                return Ok(new { message = "Checkout thành công", data = order });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Thanh toán cho order
+        /// POST: api/customer/orders/{orderId}/pay
+        /// Body: { "amount": 100000, "paymentMethod": "card" }
+        /// </summary>
+        [HttpPost("{orderId}/pay")]
+        public async Task<IActionResult> PayOrder(int orderId, [FromBody] PaymentDto paymentDto)
+        {
+            Console.WriteLine($"[Controller] PayOrder API called: OrderId={orderId}, Amount={paymentDto.Amount}, Method={paymentDto.PaymentMethod}");
+
+            try
+            {
+                var customerId = GetCustomerId();
+                Console.WriteLine($"[Controller] CustomerId from JWT: {customerId}");
+
+                var order = await _orderService.GetOrderByIdAsync(orderId);
+                if (order == null)
+                {
+                    Console.WriteLine($"[Controller] Order {orderId} not found");
+                    return NotFound(new { message = "Order không tồn tại" });
+                }
+
+                if (order.CustomerId != customerId)
+                {
+                    Console.WriteLine($"[Controller] Forbidden: Order {orderId} does not belong to customer {customerId}");
+                    return Forbid();
+                }
+
+                var payment = await _paymentService.CreatePayment(paymentDto);
+
+                Console.WriteLine($"[Controller] Payment successful: PaymentId={payment.PaymentId}, Amount={payment.Amount}");
+
+                return Ok(new { message = "Thanh toán thành công", data = payment });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Controller] Exception: {ex.Message}");
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
     }
+
+
 
     // Request model
     public class CreateOrderFromCartRequest
-    {
-        public string? PromoCode { get; set; }
-    }
+{
+    public int? PromoId { get; set; }   
+    public string? PaymentMethod { get; set; } = "cash"; 
+}
+
+
+
+
+
 }
