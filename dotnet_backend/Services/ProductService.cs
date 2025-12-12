@@ -34,6 +34,7 @@ public class ProductService : IProductService
             Unit = p.Unit,
             CategoryId = p.CategoryId,
             SupplierId = p.SupplierId,
+            Deleted = p.Deleted,
             Quantity = p.Inventories.FirstOrDefault() != null ? p.Inventories.FirstOrDefault().Quantity : 0,
             Category = p.Category != null ? new CategoryDto
             {
@@ -105,6 +106,7 @@ public class ProductService : IProductService
                 Unit = p.Unit,
                 CategoryId = p.CategoryId,
                 SupplierId = p.SupplierId,
+                Deleted = p.Deleted,
                 Quantity = p.Inventories.FirstOrDefault() != null ? p.Inventories.FirstOrDefault().Quantity : 0,
                 Category = p.Category != null ? new CategoryDto
                 {
@@ -194,6 +196,7 @@ public class ProductService : IProductService
                 Unit = p.Unit,
                 CategoryId = p.CategoryId,
                 SupplierId = p.SupplierId,
+                Deleted = p.Deleted,
                 Quantity = p.Inventories.FirstOrDefault() != null ? p.Inventories.FirstOrDefault().Quantity : 0,
                 Category = p.Category != null ? new CategoryDto
                 {

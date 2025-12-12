@@ -810,15 +810,23 @@ public class OrderService : IOrderService
                 CreatedAt      = DateTime.Now
             };
 
-            // If payment method is immediate (cash or e-wallet), mark order and bill as paid now
+            // Chỉ e-wallet mới tự động chuyển sang paid ngay
+            // Cash sẽ giữ trạng thái pending/unpaid cho đến khi xác nhận
             var method = (paymentMethod ?? "").ToLower();
-            if (method == "cash" || method == "e-wallet")
+            if (method == "e-wallet")
             {
                 order.PayStatus = "paid";
                 bill.PayStatus = "paid";
                 bill.PaidAt = DateTime.Now;
-                // also set payment date if not set
+                payment.TransactionStatus = "success";
                 payment.PaymentDate = DateTime.Now;
+            }
+            else if (method == "cash")
+            {
+                // Cash: giữ trạng thái pending/unpaid
+                order.PayStatus = "pending";
+                bill.PayStatus = "unpaid";
+                payment.TransactionStatus = "pending";
             }
 
             _context.Bills.Add(bill);

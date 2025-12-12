@@ -169,7 +169,8 @@ public class InventoryService : IInventoryService
         var response = new ValidateCartStockResponse
         {
             IsValid = true,
-            OutOfStockProducts = new List<OutOfStockProduct>()
+            OutOfStockProducts = new List<OutOfStockProduct>(),
+            DeletedProducts = new List<DeletedProduct>()
         };
 
         foreach (var item in request.Items)
@@ -178,6 +179,20 @@ public class InventoryService : IInventoryService
                 .Include(i => i.Product)
                 .FirstOrDefaultAsync(i => i.ProductId == item.ProductId);
 
+            // Kiểm tra sản phẩm đã bị xóa mềm (Deleted = true)
+            if (inventory?.Product?.Deleted == true)
+            {
+                response.IsValid = false;
+                response.DeletedProducts.Add(new DeletedProduct
+                {
+                    ProductId = item.ProductId,
+                    ProductName = inventory.Product.ProductName ?? "Unknown Product",
+                    Quantity = item.Quantity
+                });
+                continue;
+            }
+
+            // Kiểm tra tồn kho
             if (inventory == null || inventory.Quantity < item.Quantity)
             {
                 response.IsValid = false;
