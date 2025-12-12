@@ -9,6 +9,8 @@ public class ProductDto
     public string Barcode { get; set; }
     public string Unit { get; set; }
 
+    public string? ImageUrl { get; set; }
+
     public DateTime? CreatedAt { get; set; }
 
     public virtual CategoryDto? Category { get; set; }

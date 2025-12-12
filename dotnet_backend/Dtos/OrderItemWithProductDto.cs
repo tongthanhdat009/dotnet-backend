@@ -17,5 +17,6 @@ namespace dotnet_backend.Dtos
         public string Barcode { get; set; }
         public decimal ProductPrice { get; set; }
         public string Unit { get; set; }
+        public string? ImageUrl { get; set; }
     }
 }

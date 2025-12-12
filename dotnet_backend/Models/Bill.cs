@@ -18,7 +18,9 @@ public partial class Bill
 
     public string? PaymentMethod { get; set; }
 
-    public string Status { get; set; } = "unpaid";
+    public string PayStatus { get; set; } = "unpaid";
+
+    public string BillStatus { get; set; } = "pending";
 
     public DateTime? CreatedAt { get; set; }
 

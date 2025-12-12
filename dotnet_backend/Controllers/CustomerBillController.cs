@@ -120,7 +120,7 @@ namespace dotnet_backend.Controllers
                 var allBills = await _billService.GetBillsByCustomerIdAsync(customerId);
                 
                 var filteredBills = allBills.Where(b => 
-                    b.Status?.ToLower() == status.ToLower()).ToList();
+                    b.PayStatus?.ToLower() == status.ToLower()).ToList();
 
                 return Ok(filteredBills);
             }
@@ -142,7 +142,7 @@ namespace dotnet_backend.Controllers
                 var customerId = GetCustomerId();
                 var bills = await _billService.GetBillsByCustomerIdAsync(customerId);
                 
-                var unpaidBills = bills.Where(b => b.Status == "unpaid").ToList();
+                var unpaidBills = bills.Where(b => b.PayStatus == "unpaid").ToList();
                 return Ok(unpaidBills);
             }
             catch (UnauthorizedAccessException ex)
@@ -163,7 +163,7 @@ namespace dotnet_backend.Controllers
                 var customerId = GetCustomerId();
                 var bills = await _billService.GetBillsByCustomerIdAsync(customerId);
                 
-                var paidBills = bills.Where(b => b.Status == "paid")
+                var paidBills = bills.Where(b => b.PayStatus == "paid")
                     .OrderByDescending(b => b.PaidAt)
                     .ToList();
                 
@@ -188,7 +188,7 @@ namespace dotnet_backend.Controllers
                 var bills = await _billService.GetBillsByCustomerIdAsync(customerId);
                 
                 var totalSpent = bills
-                    .Where(b => b.Status == "paid")
+                    .Where(b => b.PayStatus == "paid")
                     .Sum(b => b.FinalAmount);
 
                 return Ok(new { totalSpent });

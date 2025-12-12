@@ -59,7 +59,8 @@ public class OrderService : IOrderService
                 OrderDate = o.OrderDate,
                 TotalAmount = o.TotalAmount,
                 DiscountAmount = o.DiscountAmount,
-                Status = o.Status,
+                PayStatus = o.PayStatus,
+                OrderStatus = o.OrderStatus,
                 OrderType = o.OrderType,
 
                 Customer = o.Customer == null ? null : new CustomerDto
@@ -112,7 +113,8 @@ public class OrderService : IOrderService
                 OrderDate = o.OrderDate,
                 TotalAmount = o.TotalAmount,
                 DiscountAmount = o.DiscountAmount,
-                Status = o.Status,
+                PayStatus = o.PayStatus,
+                OrderStatus = o.OrderStatus,
                 OrderType = o.OrderType,
 
                 Customer = o.Customer == null ? null : new CustomerDto
@@ -170,7 +172,8 @@ public class OrderService : IOrderService
                 OrderDate = o.OrderDate,
                 TotalAmount = o.TotalAmount,
                 DiscountAmount = o.DiscountAmount,
-                Status = o.Status,
+                PayStatus = o.PayStatus,
+                OrderStatus = o.OrderStatus,
                 OrderType = o.OrderType,
 
                 Customer = o.Customer == null ? null : new CustomerDto
@@ -216,18 +219,18 @@ public class OrderService : IOrderService
                 .FirstOrDefaultAsync(o => o.OrderId == orderId);
 
             if (order == null)
-                throw new Exception("Không tìm thấy đơn hàng");
+                throw new Exception("Khong tim thay don hang");
 
-            order.Status = statusOrder;
+            order.PayStatus = statusOrder;
 
             // Cập nhật trạng thái BILL
             var bill = await _context.Bills
                 .FirstOrDefaultAsync(b => b.OrderId == orderId);
 
             if (bill == null)
-                throw new Exception("Không tìm thấy hóa đơn");
+                throw new Exception("Khong tim thay hoa don");
 
-            bill.Status = statusBill;
+            bill.PayStatus = statusBill;
 
             if (statusBill == "paid")
             {
@@ -266,7 +269,8 @@ public class OrderService : IOrderService
                 OrderDate = o.OrderDate,
                 TotalAmount = o.TotalAmount,
                 DiscountAmount = o.DiscountAmount,
-                Status = o.Status,
+                PayStatus = o.PayStatus,
+                OrderStatus = o.OrderStatus,
                 OrderType = o.OrderType,
 
                 Customer = o.Customer == null ? null : new CustomerDto
@@ -411,7 +415,8 @@ public class OrderService : IOrderService
             OrderDate = order.OrderDate,
             TotalAmount = order.TotalAmount,  // <- thêm
             DiscountAmount = order.DiscountAmount, // <- thêm
-            Status = order.Status,
+            PayStatus = order.PayStatus,
+            OrderStatus = order.OrderStatus,
             OrderType = order.OrderType,
 
             Customer = order.Customer == null ? null : new CustomerDto
@@ -473,15 +478,15 @@ public class OrderService : IOrderService
         {
             var order = await _context.Orders.FindAsync(orderId);
             if (order == null)
-                throw new Exception("Không tìm thấy đơn hàng.");
+                throw new Exception("Khong tim thay don hang");
 
-            if (order.Status == "canceled")
-                throw new Exception("Đơn hàng đã bị hủy trước đó.");
+            if (order.PayStatus == "canceled")
+                throw new Exception("Don hang da bi huy truoc do");
 
             // Nếu là pending thì chỉ cần đổi trạng thái, không cần hoàn kho hoặc kiểm tra ngày
-            if (order.Status == "pending")
+            if (order.PayStatus == "pending")
             {
-                order.Status = "canceled";
+                order.PayStatus = "canceled";
                 _context.Orders.Update(order);
                 await _context.SaveChangesAsync();
                 return true;
@@ -495,7 +500,7 @@ public class OrderService : IOrderService
                 throw new Exception("Chỉ có thể hủy đơn hàng trong cùng ngày.");
 
             // Hủy đơn và hoàn kho
-            order.Status = "canceled";
+            order.PayStatus = "canceled";
 
             var orderItems = await _context.OrderItems
                 .Where(oi => oi.OrderId == orderId)
@@ -595,7 +600,7 @@ public class OrderService : IOrderService
             OrderDate = orderDto.OrderDate,
             TotalAmount = orderDto.TotalAmount,
             DiscountAmount = orderDto.DiscountAmount,
-            Status = "pending",
+            PayStatus = "pending",
             OrderType = orderDto.OrderType ?? "offline",
             OrderItems = orderDto.OrderItems.Select(oi => new OrderItem
             {
@@ -665,7 +670,7 @@ public class OrderService : IOrderService
             OrderDate = DateTime.Now,
             TotalAmount = total,
             DiscountAmount = discount,
-            Status = "pending",
+            PayStatus = "pending",
             OrderItems = orderItems
         };
 
@@ -776,7 +781,7 @@ public class OrderService : IOrderService
                 OrderDate      = DateTime.Now,
                 TotalAmount    = total,
                 DiscountAmount = discount,
-                Status         = "pending",
+                PayStatus      = "pending",
                 OrderItems     = orderItems,
                 OrderType      = "online"
             };
@@ -801,7 +806,7 @@ public class OrderService : IOrderService
                 DiscountAmount = discount,
                 FinalAmount    = finalTotal,
                 PaymentMethod  = paymentMethod,
-                Status         = "unpaid",
+                PayStatus      = "unpaid",
                 CreatedAt      = DateTime.Now
             };
 
@@ -809,8 +814,8 @@ public class OrderService : IOrderService
             var method = (paymentMethod ?? "").ToLower();
             if (method == "cash" || method == "e-wallet")
             {
-                order.Status = "paid";
-                bill.Status = "paid";
+                order.PayStatus = "paid";
+                bill.PayStatus = "paid";
                 bill.PaidAt = DateTime.Now;
                 // also set payment date if not set
                 payment.PaymentDate = DateTime.Now;

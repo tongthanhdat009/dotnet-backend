@@ -195,7 +195,7 @@ namespace dotnet_backend.Controllers
                     return Forbid();
 
                 // Kiểm tra trạng thái
-                if (order.Status != "pending")
+                if (order.PayStatus != "pending")
                     return BadRequest(new { message = "Chỉ có thể hủy đơn hàng đang chờ xử lý" });
 
                 var result = await _orderService.CancelOrderAsync(orderId);
@@ -223,7 +223,7 @@ namespace dotnet_backend.Controllers
                 var allOrders = await _orderService.GetOrdersByCustomerIdAsync(customerId);
                 
                 var filteredOrders = allOrders.Where(o => 
-                    o.Status?.ToLower() == status.ToLower()).ToList();
+                    o.PayStatus?.ToLower() == status.ToLower()).ToList();
 
                 return Ok(filteredOrders);
             }

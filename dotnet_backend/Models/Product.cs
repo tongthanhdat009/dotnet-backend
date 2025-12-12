@@ -19,6 +19,10 @@ public partial class Product
 
     public string? Unit { get; set; }
 
+    public bool Deleted { get; set; } = false;
+
+    public string? ImageUrl { get; set; }
+
     public DateTime? CreatedAt { get; set; }
 
     public virtual Category? Category { get; set; }

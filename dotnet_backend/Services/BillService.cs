@@ -47,7 +47,7 @@ namespace dotnet_backend.Services
                 TotalAmount = order.TotalAmount ?? 0,
                 DiscountAmount = order.DiscountAmount ?? 0,
                 FinalAmount = (order.TotalAmount ?? 0) - (order.DiscountAmount ?? 0),
-                Status = "paid",
+                PayStatus = "paid",
                 CreatedAt = DateTime.Now
             };
 
@@ -120,7 +120,7 @@ namespace dotnet_backend.Services
             if (bill == null)
                 return null;
 
-            bill.Status = status.ToLower();
+            bill.PayStatus = status.ToLower();
 
             if (status.ToLower() == "paid" && bill.PaidAt == null)
             {
@@ -142,7 +142,7 @@ namespace dotnet_backend.Services
             if (bill == null)
                 return null;
 
-            bill.Status = "paid";
+            bill.PayStatus = "paid";
             bill.PaymentMethod = paymentMethod;
             bill.PaidAt = DateTime.Now;
 
@@ -161,10 +161,10 @@ namespace dotnet_backend.Services
             if (bill == null)
                 return null;
 
-            if (bill.Status == "paid")
-                throw new InvalidOperationException("Không thể hủy hóa đơn đã thanh toán");
+            if (bill.PayStatus == "paid")
+                throw new InvalidOperationException("Khong the huy hoa don da thanh toan");
 
-            bill.Status = "cancelled";
+            bill.PayStatus = "cancelled";
 
             _context.Bills.Update(bill);
             await _context.SaveChangesAsync();
@@ -181,8 +181,8 @@ namespace dotnet_backend.Services
             if (bill == null)
                 return false;
 
-            if (bill.Status == "paid")
-                throw new InvalidOperationException("Không thể xóa hóa đơn đã thanh toán");
+            if (bill.PayStatus == "paid")
+                throw new InvalidOperationException("Khong the xoa hoa don da thanh toan");
 
             _context.Bills.Remove(bill);
             await _context.SaveChangesAsync();
@@ -198,7 +198,7 @@ namespace dotnet_backend.Services
             return await _context.Bills
                 .Include(b => b.Order)
                 .Include(b => b.Customer)
-                .Where(b => b.Status == status.ToLower())
+                .Where(b => b.PayStatus == status.ToLower())
                 .OrderByDescending(b => b.CreatedAt)
                 .ToListAsync();
         }
@@ -222,7 +222,7 @@ namespace dotnet_backend.Services
         public async Task<decimal> GetTotalRevenueAsync()
         {
             return await _context.Bills
-                .Where(b => b.Status == "paid")
+                .Where(b => b.PayStatus == "paid")
                 .SumAsync(b => b.FinalAmount);
         }
 
@@ -232,7 +232,7 @@ namespace dotnet_backend.Services
         public async Task<decimal> GetRevenueByDateRangeAsync(DateTime startDate, DateTime endDate)
         {
             return await _context.Bills
-                .Where(b => b.Status == "paid" 
+                .Where(b => b.PayStatus == "paid" 
                     && b.PaidAt >= startDate 
                     && b.PaidAt <= endDate)
                 .SumAsync(b => b.FinalAmount);

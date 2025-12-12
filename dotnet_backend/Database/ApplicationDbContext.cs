@@ -137,10 +137,14 @@ public partial class ApplicationDbContext : DbContext
                 .HasColumnType("timestamp")
                 .HasColumnName("order_date");
             entity.Property(e => e.PromoId).HasColumnName("promo_id");
-            entity.Property(e => e.Status)
+            entity.Property(e => e.PayStatus)
                 .HasDefaultValueSql("'pending'")
-                .HasColumnType("enum('pending','paid','canceled')")
-                .HasColumnName("status");
+                .HasColumnType("enum('pending','paid','canceled','refunded')")
+                .HasColumnName("pay_status");
+            entity.Property(e => e.OrderStatus)
+                .HasDefaultValueSql("'pending'")
+                .HasColumnType("enum('pending','approved','processing','shipping','delivered','completed','canceled')")
+                .HasColumnName("order_status");
             entity.Property(e => e.TotalAmount)
                 .HasPrecision(10, 2)
                 .HasColumnName("total_amount");
@@ -219,6 +223,10 @@ public partial class ApplicationDbContext : DbContext
                 .HasDefaultValueSql("'cash'")
                 .HasColumnType("enum('cash','card','bank_transfer','e-wallet')")
                 .HasColumnName("payment_method");
+            entity.Property(e => e.TransactionStatus)
+                .HasDefaultValueSql("'pending'")
+                .HasColumnType("enum('pending','success','failed')")
+                .HasColumnName("transaction_status");
 
             entity.HasOne(d => d.Order).WithMany(p => p.Payments)
                 .HasForeignKey(d => d.OrderId)
@@ -277,6 +285,13 @@ public partial class ApplicationDbContext : DbContext
                 .HasMaxLength(20)
                 .HasDefaultValueSql("'pcs'")
                 .HasColumnName("unit");
+            entity.Property(e => e.Deleted)
+                .HasDefaultValue(false)
+                .HasColumnType("tinyint(1)")
+                .HasColumnName("deleted");
+            entity.Property(e => e.ImageUrl)
+                .HasMaxLength(255)
+                .HasColumnName("image_url");
 
             entity.HasOne(d => d.Category).WithMany(p => p.Products)
                 .HasForeignKey(d => d.CategoryId)
@@ -477,10 +492,14 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.PaymentMethod)
                 .HasMaxLength(50)
                 .HasColumnName("payment_method");
-            entity.Property(e => e.Status)
-                .HasDefaultValue("unpaid")
-                .HasColumnType("enum('unpaid','paid','cancelled')")
-                .HasColumnName("status");
+            entity.Property(e => e.PayStatus)
+                .HasDefaultValueSql("'unpaid'")
+                .HasColumnType("enum('unpaid','paid','refunded')")
+                .HasColumnName("pay_status");
+            entity.Property(e => e.BillStatus)
+                .HasDefaultValueSql("'pending'")
+                .HasColumnType("enum('pending','exported','canceled')")
+                .HasColumnName("bill_status");
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("timestamp")

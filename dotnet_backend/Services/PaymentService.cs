@@ -30,9 +30,9 @@ public class PaymentService : IPaymentService
                 .FirstOrDefaultAsync(o => o.OrderId == paymentDto.OrderId);
 
             if (order == null)
-                throw new Exception("Không tìm thấy order.");
+                throw new Exception("Khong tim thay order.");
 
-            Console.WriteLine($"[PaymentService] Order found: Status={order.Status}, TotalAmount={order.TotalAmount}");
+            Console.WriteLine($"[PaymentService] Order found: PayStatus={order.PayStatus}, TotalAmount={order.TotalAmount}");
 
             var paidBefore = await _context.Payments
                 .Where(p => p.OrderId == order.OrderId)
@@ -75,7 +75,7 @@ public class PaymentService : IPaymentService
             var method = (paymentDto.PaymentMethod ?? "").ToLower();
             if (method == "cash" || method == "e-wallet")
             {
-                order.Status = "paid";
+                order.PayStatus = "paid";
                 _context.Orders.Update(order);
                 Console.WriteLine($"[PaymentService] Order status updated to 'paid' due to immediate payment method: {paymentDto.PaymentMethod}");
 
@@ -96,7 +96,7 @@ public class PaymentService : IPaymentService
                     DiscountAmount = order.DiscountAmount ?? 0,
                     FinalAmount = (order.TotalAmount ?? 0) - (order.DiscountAmount ?? 0),
                     PaymentMethod = paymentDto.PaymentMethod,
-                    Status = "paid",
+                    PayStatus = "paid",
                     CreatedAt = DateTime.Now,
                     PaidAt = DateTime.Now
                 };
@@ -106,7 +106,7 @@ public class PaymentService : IPaymentService
             else if (afterPay == order.TotalAmount)
             {
                 // fallback: if full amount paid by other method, mark paid
-                order.Status = "paid";
+                order.PayStatus = "paid";
                 _context.Orders.Update(order);
                 Console.WriteLine($"[PaymentService] Order status updated to 'paid' (full payment)");
 
@@ -127,7 +127,7 @@ public class PaymentService : IPaymentService
                     DiscountAmount = order.DiscountAmount ?? 0,
                     FinalAmount = (order.TotalAmount ?? 0) - (order.DiscountAmount ?? 0),
                     PaymentMethod = paymentDto.PaymentMethod,
-                    Status = "paid",
+                    PayStatus = "paid",
                     CreatedAt = DateTime.Now,
                     PaidAt = DateTime.Now
                 };

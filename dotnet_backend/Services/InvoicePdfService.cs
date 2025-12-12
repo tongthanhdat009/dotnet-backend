@@ -74,7 +74,8 @@ public class InvoicePdfService : IInvoicePdfService
                                 col.Item().Text("Thông tin hóa đơn").Bold().FontSize(14);
                                 col.Item().PaddingTop(5).Text($"Mã đơn hàng: {order.OrderId}");
                                 col.Item().Text($"Ngày đặt: {order.OrderDate:dd/MM/yyyy HH:mm}");
-                                col.Item().Text($"Trạng thái: {order.Status}");
+                                col.Item().Text($"Trạng thái thanh toán: {order.PayStatus}");
+                                col.Item().Text($"Trạng thái đơn hàng: {order.OrderStatus}");
                                 if (bill != null)
                                 {
                                     col.Item().Text($"Mã hóa đơn: {bill.BillId}");

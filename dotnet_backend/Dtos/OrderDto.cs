@@ -12,7 +12,9 @@ public class OrderDto
 
     public DateTime? OrderDate { get; set; }
 
-    public string? Status { get; set; }
+    public string? PayStatus { get; set; }
+
+    public string? OrderStatus { get; set; }
 
     public decimal? TotalAmount { get; set; }
 

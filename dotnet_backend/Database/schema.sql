@@ -29,6 +29,8 @@ CREATE TABLE `products` (
   `barcode` varchar(50) DEFAULT null,
   `price` decimal(10,2) NOT NULL,
   `unit` varchar(20) DEFAULT 'pcs',
+  `deleted` TINYINT(1) DEFAULT 0, -- Cột mới: Trạng thái xóa mềm (0: chưa xóa, 1: đã xóa)
+  `image_url` varchar(255) DEFAULT null,
   `created_at` timestamp DEFAULT (now())
 );
 
@@ -74,7 +76,13 @@ CREATE TABLE `orders` (
   `user_id` int DEFAULT null,
   `promo_id` int DEFAULT null,
   `order_date` timestamp DEFAULT (now()),
-  `status` ENUM ('pending', 'paid', 'canceled') DEFAULT 'pending',
+  
+  -- Cột mới: Trạng thái thanh toán
+  `pay_status` ENUM ('pending', 'paid', 'canceled', 'refunded') DEFAULT 'pending',
+  
+  -- Cột mới: Trạng thái vận hành đơn hàng
+  `order_status` ENUM ('pending', 'approved', 'processing', 'shipping', 'delivered', 'completed', 'canceled') DEFAULT 'pending',
+  
   `total_amount` decimal(10,2) DEFAULT null,
   `discount_amount` decimal(10,2) DEFAULT '0.00',
   `order_type` ENUM ('online', 'offline') DEFAULT 'offline'
@@ -94,6 +102,10 @@ CREATE TABLE `payments` (
   `order_id` int NOT NULL,
   `amount` decimal(10,2) NOT NULL,
   `payment_method` ENUM ('cash', 'card', 'bank_transfer', 'e-wallet') DEFAULT 'cash',
+  
+  -- Cột mới: Trạng thái giao dịch (cho cổng thanh toán)
+  `transaction_status` ENUM ('pending', 'success', 'failed') DEFAULT 'pending',
+  
   `payment_date` timestamp DEFAULT (now())
 );
 
@@ -127,83 +139,54 @@ CREATE TABLE `bills` (
   `discount_amount` DECIMAL(10,2) DEFAULT NULL,
   `final_amount` DECIMAL(10,2) NOT NULL,
   `payment_method` VARCHAR(50) DEFAULT NULL,
-  `status` ENUM('unpaid', 'paid', 'cancelled') DEFAULT 'unpaid',
+  
+  -- Cột sửa đổi: Trạng thái tiền của hóa đơn
+  `pay_status` ENUM('unpaid', 'paid', 'refunded') DEFAULT 'unpaid',
+  
+  -- Cột mới: Trạng thái xử lý hóa đơn
+  `bill_status` ENUM('pending', 'exported', 'canceled') DEFAULT 'pending',
+  
   `created_at` TIMESTAMP DEFAULT (CURRENT_TIMESTAMP),
   `paid_at` TIMESTAMP DEFAULT NULL
 );
 
+-- Indexes
 CREATE UNIQUE INDEX `email` ON `customers` (`email`);
-
 CREATE UNIQUE INDEX `barcode` ON `products` (`barcode`);
-
 CREATE INDEX `fk_products_categories` ON `products` (`category_id`);
-
 CREATE INDEX `fk_products_suppliers` ON `products` (`supplier_id`);
-
 CREATE INDEX `fk_inventory_products` ON `inventory` (`product_id`);
-
 CREATE UNIQUE INDEX `promo_code` ON `promotions` (`promo_code`);
-
 CREATE UNIQUE INDEX `role_name` ON `roles` (`role_name`);
-
 CREATE UNIQUE INDEX `username` ON `users` (`username`);
-
 CREATE INDEX `role` ON `users` (`role`);
-
 CREATE INDEX `fk_orders_customers` ON `orders` (`customer_id`);
-
 CREATE INDEX `fk_orders_users` ON `orders` (`user_id`);
-
 CREATE INDEX `fk_orders_promotions` ON `orders` (`promo_id`);
-
 CREATE INDEX `fk_order_items_orders` ON `order_items` (`order_id`);
-
 CREATE INDEX `fk_order_items_products` ON `order_items` (`product_id`);
-
 CREATE INDEX `fk_payments_orders` ON `payments` (`order_id`);
-
 CREATE UNIQUE INDEX `action_key` ON `permissions` (`action_key`);
-
 CREATE INDEX `permission_id` ON `role_permissions` (`permission_id`);
-
 CREATE INDEX `fk_cart_items_products` ON `cart_items` (`product_id`);
-
 CREATE INDEX `fk_cart_items_customers` ON `cart_items` (`customer_id`);
-
 CREATE INDEX `fk_bills_orders` ON `bills` (`order_id`);
-
 CREATE INDEX `fk_bills_customers` ON `bills` (`customer_id`);
 
+-- Foreign Keys
 ALTER TABLE `products` ADD CONSTRAINT `fk_products_categories` FOREIGN KEY (`category_id`) REFERENCES `categories` (`category_id`) ON DELETE SET NULL;
-
 ALTER TABLE `products` ADD CONSTRAINT `fk_products_suppliers` FOREIGN KEY (`supplier_id`) REFERENCES `suppliers` (`supplier_id`) ON DELETE SET NULL;
-
 ALTER TABLE `inventory` ADD CONSTRAINT `fk_inventory_products` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE;
-
 ALTER TABLE `users` ADD CONSTRAINT `users_ibfk_1` FOREIGN KEY (`role`) REFERENCES `roles` (`role_id`);
-
 ALTER TABLE `orders` ADD CONSTRAINT `fk_orders_customers` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`customer_id`) ON DELETE SET NULL;
-
 ALTER TABLE `orders` ADD CONSTRAINT `fk_orders_promotions` FOREIGN KEY (`promo_id`) REFERENCES `promotions` (`promo_id`) ON DELETE SET NULL;
-
 ALTER TABLE `orders` ADD CONSTRAINT `fk_orders_users` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE SET NULL;
-
 ALTER TABLE `order_items` ADD CONSTRAINT `fk_order_items_orders` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON DELETE CASCADE;
-
 ALTER TABLE `order_items` ADD CONSTRAINT `fk_order_items_products` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE RESTRICT;
-
 ALTER TABLE `payments` ADD CONSTRAINT `fk_payments_orders` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON DELETE CASCADE;
-
 ALTER TABLE `role_permissions` ADD CONSTRAINT `role_permissions_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `roles` (`role_id`) ON DELETE CASCADE;
-
 ALTER TABLE `role_permissions` ADD CONSTRAINT `role_permissions_ibfk_2` FOREIGN KEY (`permission_id`) REFERENCES `permissions` (`permission_id`) ON DELETE CASCADE;
-
 ALTER TABLE `cart_items` ADD CONSTRAINT `fk_cart_items_customers` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`customer_id`) ON DELETE CASCADE;
-
 ALTER TABLE `cart_items` ADD CONSTRAINT `fk_cart_items_products` FOREIGN KEY (`product_id`) REFERENCES `products` (`product_id`) ON DELETE CASCADE;
-
 ALTER TABLE `bills` ADD CONSTRAINT `fk_bills_orders` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON DELETE CASCADE;
-
 ALTER TABLE `bills` ADD CONSTRAINT `fk_bills_customers` FOREIGN KEY (`customer_id`) REFERENCES `customers` (`customer_id`) ON DELETE SET NULL;
-
-ALTER TABLE `orders` ADD COLUMN `order_type` ENUM('online', 'offline') DEFAULT 'offline' AFTER `discount_amount`;
