@@ -1,5 +1,6 @@
-using dotnet_backend.Services;
 using dotnet_backend.Dtos;
+using System.Threading.Tasks;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 namespace dotnet_backend.Services.Interface;
 
@@ -18,4 +19,7 @@ public interface IOrderService
     Task<bool> CancelOrderAsync(int orderId);
     Task<OrderDto> CreateOrderAsync(OrderDto orderDto);
     Task<IEnumerable<PromotionDto>> GetAllPromosAsync();
+    Task<OrderDto> CheckoutFromCartAsync(Dtos.CheckoutDto checkout);
+    Task<OrderDto> CheckoutFromCartAsync(int customerId, int? userId = null, int? promoId = null);
+    Task<OrderDto> PreviewOrderFromCartAsync(int customerId, int? promoId = null, string paymentMethod = "cash");
 }

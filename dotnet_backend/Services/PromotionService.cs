@@ -276,44 +276,38 @@ public class PromotionService : IPromotionService
     public async Task<ApplyPromoResponseDto> ApplyPromotionAsync(ApplyPromoRequestDto request)
     {
         if (request == null || string.IsNullOrWhiteSpace(request.PromoCode))
-        {
             throw new ArgumentException("Dữ liệu không hợp lệ.");
-        }
 
         var promo = await _context.Promotions.FirstOrDefaultAsync(p => p.PromoCode == request.PromoCode);
         if (promo == null)
-        {
-            throw new KeyNotFoundException("Không tìm thấy khuyến mãi với ID/Mã code này.");
-        }
+            throw new KeyNotFoundException("Không tìm thấy mã khuyến mãi.");
 
-        var nowDate = DateOnly.FromDateTime(DateTime.UtcNow);
-        if (promo.EndDate < nowDate)
-        {
-            throw new InvalidOperationException("Mã đã hết hạn sử dụng.");
-        }
-        if (promo.StartDate > nowDate)
-        {
-            throw new InvalidOperationException("Mã chưa có hiệu lực.");
-        }
-        if ((promo.Status ?? "") != "active")
-        {
-            throw new InvalidOperationException("Mã không còn hoạt động.");
-        }
-        if ((promo.UsageLimit ?? 0) > 0 && (promo.UsedCount ?? 0) >= (promo.UsageLimit ?? 0))
-        {
-            throw new InvalidOperationException("Mã đã đạt giới hạn sử dụng.");
-        }
-        if ((promo.MinOrderAmount ?? 0) > 0 && request.TotalAmount < (promo.MinOrderAmount ?? 0))
-        {
-            throw new InvalidOperationException("Đơn hàng chưa đạt giá trị tối thiểu.");
-        }
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
-        // Compute discount value for response
-        decimal discount = 0;
-        if (promo.DiscountType == "percent")
-            discount = Math.Round(request.TotalAmount * (promo.DiscountValue / 100m), 2);
-        else
-            discount = promo.DiscountValue;
+        // Check trạng thái
+        if ((promo.Status ?? "").ToLower() != "active")
+            throw new InvalidOperationException("Mã giảm giá không còn hoạt động.");
+
+        // Check ngày
+        if (promo.StartDate > today)
+            throw new InvalidOperationException("Mã giảm giá chưa có hiệu lực.");
+        if (promo.EndDate < today)
+            throw new InvalidOperationException("Mã giảm giá đã hết hạn.");
+
+        // Check lượt sử dụng
+        if ((promo.UsageLimit ?? 0) <= 0)
+            throw new InvalidOperationException("Mã giảm giá đã hết lượt sử dụng.");
+        if ((promo.UsedCount ?? 0) >= (promo.UsageLimit ?? 0))
+            throw new InvalidOperationException("Mã giảm giá đã đạt giới hạn sử dụng.");
+
+        // Check đơn hàng tối thiểu
+        if ((promo.MinOrderAmount ?? 0) > request.TotalAmount)
+            throw new InvalidOperationException($"Đơn hàng phải từ {(promo.MinOrderAmount ?? 0):N0} để áp dụng mã này.");
+
+        // Tính giá trị giảm giá
+        decimal discount = promo.DiscountType?.ToLower() == "percent"
+            ? Math.Round(request.TotalAmount * (promo.DiscountValue / 100m), 2)
+            : promo.DiscountValue;
 
         return new ApplyPromoResponseDto
         {
@@ -329,4 +323,77 @@ public class PromotionService : IPromotionService
             Status = promo.Status
         };
     }
+
+    public async Task<ApplyPromoResponseDto> ValidatePromoAsync(int promoId, decimal orderTotal)
+    {
+        var promo = await _context.Promotions.FindAsync(promoId);
+        if (promo == null) 
+            throw new Exception("Mã giảm giá không hợp lệ.");
+
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        if ((promo.Status ?? "").ToLower() != "active")
+            throw new Exception("Mã giảm giá không còn hoạt động.");
+        if (promo.StartDate > today)
+            throw new Exception("Mã giảm giá chưa có hiệu lực.");
+        if (promo.EndDate < today)
+            throw new Exception("Mã giảm giá đã hết hạn.");
+        if ((promo.UsageLimit ?? 0) <= 0)
+            throw new Exception("Mã giảm giá đã hết lượt sử dụng.");
+        if ((promo.UsedCount ?? 0) >= (promo.UsageLimit ?? 0))
+            throw new Exception("Mã giảm giá đã đạt giới hạn sử dụng.");
+        if ((promo.MinOrderAmount ?? 0) > orderTotal)
+            throw new Exception($"Đơn hàng phải từ {(promo.MinOrderAmount ?? 0):N0} để áp dụng mã này.");
+
+        decimal discount = promo.DiscountType?.ToLower() == "percent"
+            ? Math.Round(orderTotal * (promo.DiscountValue / 100m), 2)
+            : promo.DiscountValue;
+
+        return new ApplyPromoResponseDto
+        {
+            PromoId = promo.PromoId,
+            PromoCode = promo.PromoCode,
+            DiscountType = promo.DiscountType,
+            DiscountValue = promo.DiscountValue,
+            DiscountAmount = discount
+        };
+    }
+
+    public async Task<ApplyPromoResponseDto> ValidatePromoByCodeAsync(string promoCode, decimal orderTotal)
+    {
+        if (string.IsNullOrWhiteSpace(promoCode))
+            throw new ArgumentException("Mã giảm giá không hợp lệ.");
+
+        var promo = await _context.Promotions.FirstOrDefaultAsync(p => p.PromoCode == promoCode);
+        if (promo == null)
+            throw new KeyNotFoundException("Mã giảm giá không tồn tại.");
+
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        if ((promo.Status ?? "").ToLower() != "active")
+            throw new InvalidOperationException("Mã giảm giá không còn hoạt động.");
+        if (promo.StartDate > today)
+            throw new InvalidOperationException("Mã giảm giá chưa có hiệu lực.");
+        if (promo.EndDate < today)
+            throw new InvalidOperationException("Mã giảm giá đã hết hạn.");
+        if ((promo.UsageLimit ?? 0) <= 0 || (promo.UsedCount ?? 0) >= (promo.UsageLimit ?? 0))
+            throw new InvalidOperationException("Mã giảm giá đã hết lượt sử dụng.");
+        if ((promo.MinOrderAmount ?? 0) > orderTotal)
+            throw new InvalidOperationException($"Đơn hàng phải từ {(promo.MinOrderAmount ?? 0):N0} để áp dụng mã này.");
+
+        decimal discount = promo.DiscountType?.ToLower() == "percent"
+            ? Math.Round(orderTotal * (promo.DiscountValue / 100m), 2)
+            : promo.DiscountValue;
+
+        return new ApplyPromoResponseDto
+        {
+            PromoId = promo.PromoId,
+            PromoCode = promo.PromoCode,
+            DiscountType = promo.DiscountType,
+            DiscountValue = promo.DiscountValue,
+            DiscountAmount = discount
+        };
+    }
+
+
 }

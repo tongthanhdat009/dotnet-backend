@@ -14,11 +14,14 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
 
 // 2. Đăng ký DbContext với timeout 600 giây
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
+{
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
     options.UseMySql(
-        connectionString, 
-        ServerVersion.AutoDetect(connectionString),
-        mySqlOptions => mySqlOptions.CommandTimeout(600) // Timeout 10 phút
-    ));
+        connectionString,
+        new MySqlServerVersion(new Version(10, 4, 0)) // MariaDB 10.4
+    );
+});
+
 
 // 3. 🔐 Cấu hình JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("Jwt");
@@ -46,6 +49,8 @@ builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.PropertyNamingPolicy = null;
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        options.JsonSerializerOptions.WriteIndented = true; // dễ debug
     });
 
 // 5. Đăng ký các services
@@ -66,6 +71,9 @@ builder.Services.AddScoped<IRolePermissionService, RolePermissionService>();
 builder.Services.AddScoped<IPromotionService, PromotionService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IBillService, BillService>();
+builder.Services.AddScoped<PromotionService>();
+builder.Services.AddScoped<IOrderService, OrderService>();
+
 
 // ✅ 6. Bật CORS cho phép Vue (localhost:5173), Blazor (localhost:5000, localhost:5001, localhost:5192)
 builder.Services.AddCors(options =>
