@@ -778,7 +778,7 @@ public class OrderService : IOrderService
                 DiscountAmount = discount,
                 Status         = "pending",
                 OrderItems     = orderItems,
-                OrderType      = "offline"
+                OrderType      = "online"
             };
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();

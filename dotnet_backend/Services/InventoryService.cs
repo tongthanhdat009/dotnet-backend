@@ -163,4 +163,34 @@ public class InventoryService : IInventoryService
 
         return true;
     }
+
+    public async Task<ValidateCartStockResponse> ValidateCartStockAsync(ValidateCartStockRequest request)
+    {
+        var response = new ValidateCartStockResponse
+        {
+            IsValid = true,
+            OutOfStockProducts = new List<OutOfStockProduct>()
+        };
+
+        foreach (var item in request.Items)
+        {
+            var inventory = await _context.Inventories
+                .Include(i => i.Product)
+                .FirstOrDefaultAsync(i => i.ProductId == item.ProductId);
+
+            if (inventory == null || inventory.Quantity < item.Quantity)
+            {
+                response.IsValid = false;
+                response.OutOfStockProducts.Add(new OutOfStockProduct
+                {
+                    ProductId = item.ProductId,
+                    ProductName = inventory?.Product?.ProductName ?? "Unknown Product",
+                    RequestedQuantity = item.Quantity,
+                    AvailableQuantity = inventory?.Quantity ?? 0
+                });
+            }
+        }
+
+        return response;
+    }
 }

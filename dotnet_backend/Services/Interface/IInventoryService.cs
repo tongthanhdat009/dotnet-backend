@@ -10,4 +10,5 @@ public interface IInventoryService
     Task<InventoryDto?> GetInventoryByProductIdAsync(int productId);
     Task<InventoryDto?> UpdateInventoryAsync(int inventoryId, InventoryDto inventoryDto);
     Task<bool> UpdateQuantityAsync(int productId, int quantity);
+    Task<ValidateCartStockResponse> ValidateCartStockAsync(ValidateCartStockRequest request);
 }

@@ -71,6 +71,7 @@ builder.Services.AddScoped<IRolePermissionService, RolePermissionService>();
 builder.Services.AddScoped<IPromotionService, PromotionService>();
 builder.Services.AddScoped<ICartService, CartService>();
 builder.Services.AddScoped<IBillService, BillService>();
+builder.Services.AddScoped<IInvoicePdfService, InvoicePdfService>();
 builder.Services.AddScoped<PromotionService>();
 builder.Services.AddScoped<IOrderService, OrderService>();
 

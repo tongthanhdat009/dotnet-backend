@@ -119,4 +119,25 @@ public class InventoryController : ControllerBase
             return StatusCode(500, new { message = "Lỗi server", error = ex.Message });
         }
     }
+
+    /// Validate stock cho cart - Cho phép anonymous access
+    [AllowAnonymous]
+    [HttpPost("customer/validate-cart-stock")]
+    public async Task<ActionResult<ValidateCartStockResponse>> ValidateCartStock([FromBody] ValidateCartStockRequest request)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var response = await _inventoryService.ValidateCartStockAsync(request);
+            return Ok(response);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { message = "Lỗi server", error = ex.Message });
+        }
+    }
 }

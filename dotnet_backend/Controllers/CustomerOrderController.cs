@@ -20,13 +20,15 @@ namespace dotnet_backend.Controllers
         private readonly IOrderItemService _orderItemService;
         private readonly ICartService _cartService;
         private readonly IPaymentService _paymentService;
+        private readonly IInvoicePdfService _invoicePdfService;
 
-        public CustomerOrderController(IOrderService orderService, IOrderItemService orderItemService, ICartService cartService, IPaymentService paymentService)
+        public CustomerOrderController(IOrderService orderService, IOrderItemService orderItemService, ICartService cartService, IPaymentService paymentService, IInvoicePdfService invoicePdfService)
         {
             _orderService = orderService;
             _orderItemService = orderItemService;
             _cartService = cartService;
             _paymentService = paymentService;
+            _invoicePdfService = invoicePdfService;
         }
 
         private int GetCustomerId()
@@ -322,6 +324,41 @@ namespace dotnet_backend.Controllers
             catch (Exception ex)
             {
                 Console.WriteLine($"[Controller] Exception: {ex.Message}");
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Tải hóa đơn điện tử dưới dạng PDF
+        /// GET: api/customer/orders/{orderId}/invoice-pdf
+        /// </summary>
+        [HttpGet("{orderId}/invoice-pdf")]
+        public async Task<IActionResult> DownloadInvoicePdf(int orderId)
+        {
+            try
+            {
+                var customerId = GetCustomerId();
+                var order = await _orderService.GetOrderByIdAsync(orderId);
+                
+                if (order == null)
+                    return NotFound(new { message = "Không tìm thấy đơn hàng" });
+
+                // Kiểm tra xem order có thuộc về customer này không
+                if (order.CustomerId != customerId)
+                    return Forbid();
+
+                // Generate PDF
+                var pdfBytes = await _invoicePdfService.GenerateInvoicePdfAsync(orderId);
+                
+                // Return PDF file
+                return File(pdfBytes, "application/pdf", $"HoaDon_{orderId}_{DateTime.Now:yyyyMMdd}.pdf");
+            }
+            catch (UnauthorizedAccessException ex)
+            {
+                return Unauthorized(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
                 return BadRequest(new { message = ex.Message });
             }
         }
