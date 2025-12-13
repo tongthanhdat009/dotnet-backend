@@ -21,6 +21,7 @@ public class OrderDto
     public decimal? DiscountAmount { get; set; }
 
     public string? OrderType { get; set; }
+    public string? PaymentMethod { get; set; }
 
     public string? Name { get; set; }
 

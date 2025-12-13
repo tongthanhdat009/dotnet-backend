@@ -256,6 +256,7 @@ namespace dotnet_backend.Controllers
 
             return Ok(result);
         }
+        
         /// <summary>
         /// Thanh toán toàn bộ giỏ hàng (tạo order và trả về orderDto)
         /// POST: api/customer/orders/checkout

@@ -222,27 +222,75 @@ public class OrderService : IOrderService
 
         try
         {
-            // Cập nhật trạng thái ORDER
+            // Lấy thông tin ORDER
             var order = await _context.Orders
+                .Include(o => o.Payments)
                 .FirstOrDefaultAsync(o => o.OrderId == orderId);
 
             if (order == null)
                 throw new Exception("Khong tim thay don hang");
 
-            order.PayStatus = statusOrder;
-
-            // Cập nhật trạng thái BILL
+            // Lấy thông tin BILL
             var bill = await _context.Bills
                 .FirstOrDefaultAsync(b => b.OrderId == orderId);
 
             if (bill == null)
                 throw new Exception("Khong tim thay hoa don");
 
-            bill.PayStatus = statusBill;
-
-            if (statusBill == "paid")
+            // LOGIC HỦY ĐỌN HÀNG
+            if (statusOrder == "canceled")
             {
-                bill.PaidAt = DateTime.Now;
+                // Kiểm tra xem đơn hàng đã thanh toán thành công chưa
+                bool isPaid = order.PayStatus == "paid";
+                bool hasSuccessfulPayment = order.Payments.Any(p => p.TransactionStatus == "success");
+
+                if (isPaid && hasSuccessfulPayment)
+                {
+                    // Đơn hàng đã thanh toán thành công -> Cần REFUND
+                    order.PayStatus = "refunded";
+                    order.OrderStatus = "canceled";
+                    
+                    bill.PayStatus = "refunded";
+                    bill.BillStatus = "canceled";
+
+                    // Cập nhật trạng thái payment về pending (chờ hoàn tiền)
+                    foreach (var payment in order.Payments.Where(p => p.TransactionStatus == "success"))
+                    {
+                        payment.TransactionStatus = "pending";
+                    }
+                }
+                else
+                {
+                    // Đơn hàng chưa thanh toán -> HỦY BÌNH THƯỜNG
+                    order.PayStatus = "canceled";
+                    order.OrderStatus = "canceled";
+                    
+                    bill.PayStatus = "unpaid";
+                    bill.BillStatus = "canceled";
+
+                    // Cập nhật trạng thái payment về failed
+                    foreach (var payment in order.Payments)
+                    {
+                        if (payment.TransactionStatus == "pending")
+                        {
+                            payment.TransactionStatus = "failed";
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // CẬP NHẬT TRẠNG THÁI THÔNG THƯỜNG (không phải hủy đơn)
+                order.PayStatus = statusOrder;
+                order.OrderStatus = statusOrder;
+                
+                bill.PayStatus = statusBill;
+                bill.BillStatus = statusBill;
+
+                if (statusBill == "paid")
+                {
+                    bill.PaidAt = DateTime.Now;
+                }
             }
 
             // Lưu thay đổi
@@ -280,6 +328,7 @@ public class OrderService : IOrderService
                 PayStatus = o.PayStatus,
                 OrderStatus = o.OrderStatus,
                 OrderType = o.OrderType,
+                PaymentMethod = o.Payments.FirstOrDefault() != null ? o.Payments.FirstOrDefault()!.PaymentMethod : null,
                 Name = o.Name,
                 Address = o.Address,
                 Phone = o.Phone,
