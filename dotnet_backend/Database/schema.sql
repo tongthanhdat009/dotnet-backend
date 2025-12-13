@@ -85,7 +85,13 @@ CREATE TABLE `orders` (
   
   `total_amount` decimal(10,2) DEFAULT null,
   `discount_amount` decimal(10,2) DEFAULT '0.00',
-  `order_type` ENUM ('online', 'offline') DEFAULT 'offline'
+  `order_type` ENUM ('online', 'offline') DEFAULT 'offline',
+  
+  -- Thông tin giao hàng
+  `name` varchar(100) DEFAULT null,
+  `address` text DEFAULT null,
+  `phone` varchar(20) DEFAULT null,
+  `email` varchar(100) DEFAULT null
 );
 
 CREATE TABLE `order_items` (
@@ -147,7 +153,13 @@ CREATE TABLE `bills` (
   `bill_status` ENUM('pending', 'exported', 'canceled') DEFAULT 'pending',
   
   `created_at` TIMESTAMP DEFAULT (CURRENT_TIMESTAMP),
-  `paid_at` TIMESTAMP DEFAULT NULL
+  `paid_at` TIMESTAMP DEFAULT NULL,
+  
+  -- Thông tin giao hàng
+  `name` varchar(100) DEFAULT null,
+  `address` text DEFAULT null,
+  `phone` varchar(20) DEFAULT null,
+  `email` varchar(100) DEFAULT null
 );
 
 -- Indexes

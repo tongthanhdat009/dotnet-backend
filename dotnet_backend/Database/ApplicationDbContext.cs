@@ -153,6 +153,18 @@ public partial class ApplicationDbContext : DbContext
                 .HasDefaultValueSql("'offline'")
                 .HasColumnType("enum('online','offline')")
                 .HasColumnName("order_type");
+            entity.Property(e => e.Name)
+                .HasMaxLength(100)
+                .HasColumnName("name");
+            entity.Property(e => e.Address)
+                .HasColumnType("text")
+                .HasColumnName("address");
+            entity.Property(e => e.Phone)
+                .HasMaxLength(20)
+                .HasColumnName("phone");
+            entity.Property(e => e.Email)
+                .HasMaxLength(100)
+                .HasColumnName("email");
 
             entity.HasOne(d => d.Customer).WithMany(p => p.Orders)
                 .HasForeignKey(d => d.CustomerId)
@@ -507,6 +519,18 @@ public partial class ApplicationDbContext : DbContext
             entity.Property(e => e.PaidAt)
                 .HasColumnType("timestamp")
                 .HasColumnName("paid_at");
+            entity.Property(e => e.Name)
+                .HasMaxLength(100)
+                .HasColumnName("name");
+            entity.Property(e => e.Address)
+                .HasColumnType("text")
+                .HasColumnName("address");
+            entity.Property(e => e.Phone)
+                .HasMaxLength(20)
+                .HasColumnName("phone");
+            entity.Property(e => e.Email)
+                .HasMaxLength(100)
+                .HasColumnName("email");
 
             entity.HasOne(d => d.Order).WithMany(p => p.Bills)
                 .HasForeignKey(d => d.OrderId)

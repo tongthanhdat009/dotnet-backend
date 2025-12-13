@@ -62,6 +62,10 @@ public class OrderService : IOrderService
                 PayStatus = o.PayStatus,
                 OrderStatus = o.OrderStatus,
                 OrderType = o.OrderType,
+                Name = o.Name,
+                Address = o.Address,
+                Phone = o.Phone,
+                Email = o.Email,
 
                 Customer = o.Customer == null ? null : new CustomerDto
                 {
@@ -175,6 +179,10 @@ public class OrderService : IOrderService
                 PayStatus = o.PayStatus,
                 OrderStatus = o.OrderStatus,
                 OrderType = o.OrderType,
+                Name = o.Name,
+                Address = o.Address,
+                Phone = o.Phone,
+                Email = o.Email,
 
                 Customer = o.Customer == null ? null : new CustomerDto
                 {
@@ -272,6 +280,10 @@ public class OrderService : IOrderService
                 PayStatus = o.PayStatus,
                 OrderStatus = o.OrderStatus,
                 OrderType = o.OrderType,
+                Name = o.Name,
+                Address = o.Address,
+                Phone = o.Phone,
+                Email = o.Email,
 
                 Customer = o.Customer == null ? null : new CustomerDto
                 {
@@ -418,6 +430,10 @@ public class OrderService : IOrderService
             PayStatus = order.PayStatus,
             OrderStatus = order.OrderStatus,
             OrderType = order.OrderType,
+            Name = order.Name,
+            Address = order.Address,
+            Phone = order.Phone,
+            Email = order.Email,
 
             Customer = order.Customer == null ? null : new CustomerDto
             {
@@ -602,6 +618,10 @@ public class OrderService : IOrderService
             DiscountAmount = orderDto.DiscountAmount,
             PayStatus = "pending",
             OrderType = orderDto.OrderType ?? "offline",
+            Name = orderDto.Name,
+            Address = orderDto.Address,
+            Phone = orderDto.Phone,
+            Email = orderDto.Email,
             OrderItems = orderDto.OrderItems.Select(oi => new OrderItem
             {
                 ProductId = oi.ProductId,
@@ -627,13 +647,13 @@ public class OrderService : IOrderService
         if (!cartItems.Any())
             throw new ArgumentException("Giỏ hàng trống.");
 
-        // 2. Kiểm tra tồn kho (chỉ kiểm tra, không thay đổi)
-        foreach (var ci in cartItems)
-        {
-            var inv = await _context.Inventories.FirstOrDefaultAsync(i => i.ProductId == ci.ProductId);
-            if (inv == null) throw new Exception($"Không tìm thấy tồn kho cho sản phẩm {ci.Product.ProductName}");
-            if (inv.Quantity < ci.Quantity) throw new Exception($"Sản phẩm {ci.Product.ProductName} chỉ còn {inv.Quantity} trong kho.");
-        }
+        // 2. Kiểm tra tồn kho - ĐÃ TẮT: Không cần kiểm tra tồn kho
+        // foreach (var ci in cartItems)
+        // {
+        //     var inv = await _context.Inventories.FirstOrDefaultAsync(i => i.ProductId == ci.ProductId);
+        //     if (inv == null) throw new Exception($"Không tìm thấy tồn kho cho sản phẩm {ci.Product.ProductName}");
+        //     if (inv.Quantity < ci.Quantity) throw new Exception($"Sản phẩm {ci.Product.ProductName} chỉ còn {inv.Quantity} trong kho.");
+        // }
 
         // 3. Tạo OrderItems
         var orderItems = cartItems.Select(ci => new OrderItemDto
@@ -677,7 +697,8 @@ public class OrderService : IOrderService
         return orderDto;
     }
 
-    public async Task<OrderDto> CheckoutFromCartAsync(int customerId, int? userId = null, int? promoId = null)
+    public async Task<OrderDto> CheckoutFromCartAsync(int customerId, int? userId = null, int? promoId = null, 
+        string? customerName = null, string? customerAddress = null, string? customerPhone = null, string? customerEmail = null)
     {
         string? promoCode = null;
 
@@ -687,7 +708,7 @@ public class OrderService : IOrderService
             promoCode = promo?.PromoCode;
         }
 
-        return await CheckoutFromCartInternalAsync(customerId, userId, promoCode, "cash");
+        return await CheckoutFromCartInternalAsync(customerId, userId, promoCode, "cash", customerName, customerAddress, customerPhone, customerEmail);
     }
 
     
@@ -700,14 +721,18 @@ public class OrderService : IOrderService
             checkout.CustomerId,
             null,
             checkout.PromoCode,
-            checkout.PaymentMethod ?? "cash"
+            checkout.PaymentMethod ?? "cash",
+            checkout.CustomerName,
+            checkout.CustomerAddress,
+            checkout.CustomerPhone,
+            checkout.CustomerEmail
         );
     }
 
     // Nếu muốn dùng từ backend theo CustomerId, UserId
     public async Task<OrderDto> CheckoutFromCartAsync(int customerId, int? userId, string? promoCode, string paymentMethod = "cash")
     {
-        return await CheckoutFromCartInternalAsync(customerId, userId, promoCode, paymentMethod);
+        return await CheckoutFromCartInternalAsync(customerId, userId, promoCode, paymentMethod, null, null, null, null);
     }
 
     // Hàm private xử lý chung
@@ -715,7 +740,11 @@ public class OrderService : IOrderService
         int customerId,
         int? userId,
         string? promoCode,
-        string paymentMethod)
+        string paymentMethod,
+        string? customerName = null,
+        string? customerAddress = null,
+        string? customerPhone = null,
+        string? customerEmail = null)
     {
         await using var tx = await _context.Database.BeginTransactionAsync();
 
@@ -730,13 +759,13 @@ public class OrderService : IOrderService
             if (!cartItems.Any())
                 throw new ArgumentException("Giỏ hàng trống.");
 
-            // 2. Kiểm tra tồn kho
-            foreach (var ci in cartItems)
-            {
-                var inv = await _context.Inventories.FirstOrDefaultAsync(i => i.ProductId == ci.ProductId);
-                if (inv == null) throw new Exception($"Không tìm thấy tồn kho cho sản phẩm {ci.Product.ProductName}");
-                if (inv.Quantity < ci.Quantity) throw new Exception($"Sản phẩm {ci.Product.ProductName} chỉ còn {inv.Quantity} trong kho.");
-            }
+            // 2. Kiểm tra tồn kho - ĐÃ TẮT: Không cần kiểm tra tồn kho vì không trừ số lượng
+            // foreach (var ci in cartItems)
+            // {
+            //     var inv = await _context.Inventories.FirstOrDefaultAsync(i => i.ProductId == ci.ProductId);
+            //     if (inv == null) throw new Exception($"Không tìm thấy tồn kho cho sản phẩm {ci.Product.ProductName}");
+            //     if (inv.Quantity < ci.Quantity) throw new Exception($"Sản phẩm {ci.Product.ProductName} chỉ còn {inv.Quantity} trong kho.");
+            // }
 
             // 3. Tạo OrderItems
             var orderItems = cartItems.Select(ci => new OrderItem
@@ -783,7 +812,11 @@ public class OrderService : IOrderService
                 DiscountAmount = discount,
                 PayStatus      = "pending",
                 OrderItems     = orderItems,
-                OrderType      = "online"
+                OrderType      = "online",
+                Name           = customerName,
+                Address        = customerAddress,
+                Phone          = customerPhone,
+                Email          = customerEmail
             };
             _context.Orders.Add(order);
             await _context.SaveChangesAsync();
@@ -807,7 +840,11 @@ public class OrderService : IOrderService
                 FinalAmount    = finalTotal,
                 PaymentMethod  = paymentMethod,
                 PayStatus      = "unpaid",
-                CreatedAt      = DateTime.Now
+                CreatedAt      = DateTime.Now,
+                Name           = order.Name,
+                Address        = order.Address,
+                Phone          = order.Phone,
+                Email          = order.Email
             };
 
             // Chỉ e-wallet mới tự động chuyển sang paid ngay
@@ -831,16 +868,16 @@ public class OrderService : IOrderService
 
             _context.Bills.Add(bill);
 
-            // 8. Cập nhật tồn kho
-            foreach (var ci in cartItems)
-            {
-                var inv = await _context.Inventories.FirstOrDefaultAsync(i => i.ProductId == ci.ProductId);
-                if (inv != null)
-                {
-                    inv.Quantity -= ci.Quantity;
-                    _context.Inventories.Update(inv);
-                }
-            }
+            // 8. Cập nhật tồn kho - ĐÃ TẮT: Không trừ số lượng inventory khi thanh toán
+            // foreach (var ci in cartItems)
+            // {
+            //     var inv = await _context.Inventories.FirstOrDefaultAsync(i => i.ProductId == ci.ProductId);
+            //     if (inv != null)
+            //     {
+            //         inv.Quantity -= ci.Quantity;
+            //         _context.Inventories.Update(inv);
+            //     }
+            // }
 
             // 9. Xóa cart items
             _context.CartItems.RemoveRange(cartItems);

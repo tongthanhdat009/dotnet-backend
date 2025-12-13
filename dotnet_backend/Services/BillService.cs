@@ -48,7 +48,11 @@ namespace dotnet_backend.Services
                 DiscountAmount = order.DiscountAmount ?? 0,
                 FinalAmount = (order.TotalAmount ?? 0) - (order.DiscountAmount ?? 0),
                 PayStatus = "paid",
-                CreatedAt = DateTime.Now
+                CreatedAt = DateTime.Now,
+                Name = order.Name,
+                Address = order.Address,
+                Phone = order.Phone,
+                Email = order.Email
             };
 
             _context.Bills.Add(bill);

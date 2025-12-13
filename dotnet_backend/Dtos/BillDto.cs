@@ -15,6 +15,10 @@ namespace dotnet_backend.Dtos
         public string Status { get; set; } = string.Empty;
         public DateTime? CreatedAt { get; set; }
         public DateTime? PaidAt { get; set; }
+        public string? Name { get; set; }
+        public string? Address { get; set; }
+        public string? Phone { get; set; }
+        public string? Email { get; set; }
     }
 
     public class CreateBillDto

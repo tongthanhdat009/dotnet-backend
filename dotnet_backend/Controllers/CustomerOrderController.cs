@@ -68,7 +68,11 @@ namespace dotnet_backend.Controllers
                 {
                     CustomerId = customerId,
                     OrderItems = orderItems,
-                    PromoId = request.PromoId
+                    PromoId = request?.PromoId,
+                    Name = request?.CustomerName,
+                    Address = request?.CustomerAddress,
+                    Phone = request?.CustomerPhone,
+                    Email = request?.CustomerEmail
                 };
 
                 var order = await _orderService.CreateOrderAsync(orderDto);
@@ -268,16 +272,8 @@ namespace dotnet_backend.Controllers
                 request ??= new CheckoutDto();
                 request.CustomerId = customerId;
 
-                OrderDto order;
-                // If frontend sent PromoId instead of PromoCode, use overload that accepts promoId
-                if (request.PromoId.HasValue)
-                {
-                    order = await _orderService.CheckoutFromCartAsync(customerId, null, request.PromoId);
-                }
-                else
-                {
-                    order = await _orderService.CheckoutFromCartAsync(request);
-                }
+                // Luôn sử dụng overload với CheckoutDto để truyền thông tin khách hàng
+                var order = await _orderService.CheckoutFromCartAsync(request);
 
                 return Ok(new { message = "Checkout thành công", data = order });
             }
@@ -371,7 +367,15 @@ namespace dotnet_backend.Controllers
     public class CreateOrderFromCartRequest
 {
     public int? PromoId { get; set; }   
-    public string? PaymentMethod { get; set; } = "cash"; 
+    public string? PaymentMethod { get; set; } = "cash";
+    public string? PromoCode { get; set; }
+    public decimal? DiscountAmount { get; set; }
+    
+    // Customer information
+    public string? CustomerName { get; set; }
+    public string? CustomerAddress { get; set; }
+    public string? CustomerPhone { get; set; }
+    public string? CustomerEmail { get; set; }
 }
 
 

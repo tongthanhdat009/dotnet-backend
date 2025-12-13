@@ -20,6 +20,7 @@ public interface IOrderService
     Task<OrderDto> CreateOrderAsync(OrderDto orderDto);
     Task<IEnumerable<PromotionDto>> GetAllPromosAsync();
     Task<OrderDto> CheckoutFromCartAsync(Dtos.CheckoutDto checkout);
-    Task<OrderDto> CheckoutFromCartAsync(int customerId, int? userId = null, int? promoId = null);
+    Task<OrderDto> CheckoutFromCartAsync(int customerId, int? userId = null, int? promoId = null, 
+        string? customerName = null, string? customerAddress = null, string? customerPhone = null, string? customerEmail = null);
     Task<OrderDto> PreviewOrderFromCartAsync(int customerId, int? promoId = null, string paymentMethod = "cash");
 }

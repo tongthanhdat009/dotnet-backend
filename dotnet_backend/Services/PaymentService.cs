@@ -98,7 +98,11 @@ public class PaymentService : IPaymentService
                     PaymentMethod = paymentDto.PaymentMethod,
                     PayStatus = "paid",
                     CreatedAt = DateTime.Now,
-                    PaidAt = DateTime.Now
+                    PaidAt = DateTime.Now,
+                    Name = order.Name,
+                    Address = order.Address,
+                    Phone = order.Phone,
+                    Email = order.Email
                 };
                 _context.Bills.Add(bill);
                 Console.WriteLine($"[PaymentService] Bill created for OrderId={order.OrderId}");
@@ -129,7 +133,11 @@ public class PaymentService : IPaymentService
                     PaymentMethod = paymentDto.PaymentMethod,
                     PayStatus = "paid",
                     CreatedAt = DateTime.Now,
-                    PaidAt = DateTime.Now
+                    PaidAt = DateTime.Now,
+                    Name = order.Name,
+                    Address = order.Address,
+                    Phone = order.Phone,
+                    Email = order.Email
                 };
                 _context.Bills.Add(bill);
                 Console.WriteLine($"[PaymentService] Bill created for OrderId={order.OrderId}");

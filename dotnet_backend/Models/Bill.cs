@@ -26,6 +26,14 @@ public partial class Bill
 
     public DateTime? PaidAt { get; set; }
 
+    public string? Name { get; set; }
+
+    public string? Address { get; set; }
+
+    public string? Phone { get; set; }
+
+    public string? Email { get; set; }
+
     public virtual Order Order { get; set; } = null!;
 
     public virtual Customer? Customer { get; set; }
