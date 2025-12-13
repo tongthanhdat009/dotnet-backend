@@ -180,7 +180,7 @@ namespace dotnet_backend.Controllers
 
 
         /// <summary>
-        /// Hủy đơn hàng (chỉ hủy được khi status = pending)
+        /// Hủy đơn hàng (có thể hủy đơn pending hoặc paid, paid sẽ tự động hoàn tiền)
         /// POST: api/customer/orders/{orderId}/cancel
         /// </summary>
         [HttpPost("{orderId}/cancel")]
@@ -198,19 +198,28 @@ namespace dotnet_backend.Controllers
                 if (order.CustomerId != customerId)
                     return Forbid();
 
-                // Kiểm tra trạng thái
-                if (order.PayStatus != "pending")
-                    return BadRequest(new { message = "Chỉ có thể hủy đơn hàng đang chờ xử lý" });
+                // Kiểm tra trạng thái - không cho hủy đơn đã bị hủy hoặc đã hoàn tiền
+                if (order.PayStatus == "canceled" || order.PayStatus == "refunded")
+                    return BadRequest(new { message = "Đơn hàng đã bị hủy hoặc đã hoàn tiền" });
+
+                // Không cho hủy đơn đã được xử lý (đang giao, đã giao, hoàn thành)
+                var nonCancelableStatuses = new[] { "processing", "shipping", "delivered", "completed" };
+                if (nonCancelableStatuses.Contains(order.OrderStatus?.ToLower()))
+                    return BadRequest(new { message = "Không thể hủy đơn hàng đã được xử lý" });
 
                 var result = await _orderService.CancelOrderAsync(orderId);
                 if (!result)
                     return BadRequest(new { message = "Hủy đơn hàng thất bại" });
 
-                return Ok(new { message = "Đã hủy đơn hàng" });
+                return Ok(new { message = "Đã hủy đơn hàng thành công. Nếu đã thanh toán, tiền sẽ được hoàn lại." });
             }
             catch (UnauthorizedAccessException ex)
             {
                 return Unauthorized(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
             }
         }
 

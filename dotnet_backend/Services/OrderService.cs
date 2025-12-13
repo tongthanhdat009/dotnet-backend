@@ -548,24 +548,70 @@ public class OrderService : IOrderService
             if (order.PayStatus == "canceled")
                 throw new Exception("Don hang da bi huy truoc do");
 
+            // Lấy bill một lần ở đầu
+            var bill = await _context.Bills.FirstOrDefaultAsync(b => b.OrderId == orderId);
+
             // Nếu là pending thì chỉ cần đổi trạng thái, không cần hoàn kho hoặc kiểm tra ngày
             if (order.PayStatus == "pending")
             {
                 order.PayStatus = "canceled";
+                order.OrderStatus = "canceled";
+                
+                // Cập nhật bill nếu có
+                if (bill != null)
+                {
+                    bill.PayStatus = "unpaid";
+                    bill.BillStatus = "canceled";
+                }
+                
                 _context.Orders.Update(order);
                 await _context.SaveChangesAsync();
                 return true;
             }
 
-            // Nếu không phải pending (ví dụ: paid), thì kiểm tra ngày và hoàn kho
+            // Nếu không phải pending (ví dụ: paid), thì kiểm tra ngày và hoàn tiền
             if (order.OrderDate == null)
                 throw new Exception("Đơn hàng không có ngày đặt hợp lệ.");
 
             if (order.OrderDate.Value.Date != DateTime.Now.Date)
                 throw new Exception("Chỉ có thể hủy đơn hàng trong cùng ngày.");
 
-            // Hủy đơn và hoàn kho
-            order.PayStatus = "canceled";
+            // Hủy đơn và tạo payment âm để hoàn tiền
+            order.PayStatus = "refunded";
+            order.OrderStatus = "canceled";
+
+            // Tính tổng tiền cần hoàn
+            var refundAmount = (order.TotalAmount ?? 0) - (order.DiscountAmount ?? 0);
+
+            Console.WriteLine($"[CancelOrder] Tạo payment hoàn tiền cho OrderId={orderId}, Amount={-refundAmount}");
+
+            // Lấy payment method từ payment gốc
+            var originalPayment = await _context.Payments
+                .Where(p => p.OrderId == orderId)
+                .OrderBy(p => p.PaymentId)
+                .FirstOrDefaultAsync();
+
+            var paymentMethod = originalPayment?.PaymentMethod ?? "cash";
+
+            // Tạo payment với giá trị âm (hoàn tiền)
+            var refundPayment = new Payment
+            {
+                OrderId = orderId,
+                Amount = -refundAmount, // Số tiền âm để đánh dấu hoàn tiền
+                PaymentMethod = paymentMethod,
+                TransactionStatus = "success",
+                PaymentDate = DateTime.Now
+            };
+            
+            _context.Payments.Add(refundPayment);
+            Console.WriteLine($"[CancelOrder] Đã thêm refund payment vào context");
+
+            // Cập nhật bill nếu có
+            if (bill != null)
+            {
+                bill.PayStatus = "refunded";
+                bill.BillStatus = "canceled";
+            }
 
             var orderItems = await _context.OrderItems
                 .Where(oi => oi.OrderId == orderId)
@@ -583,12 +629,17 @@ public class OrderService : IOrderService
             }
 
             _context.Orders.Update(order);
+            
+            Console.WriteLine($"[CancelOrder] Bắt đầu SaveChanges cho OrderId={orderId}");
             await _context.SaveChangesAsync();
+            Console.WriteLine($"[CancelOrder] Hoàn tất hủy đơn hàng OrderId={orderId}");
 
             return true;
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"[CancelOrder] LỖI: {ex.Message}");
+            Console.WriteLine($"[CancelOrder] StackTrace: {ex.StackTrace}");
             throw new Exception($"Lỗi khi hủy đơn hàng ID {orderId}: {ex.Message}", ex);
         }
     }
@@ -871,11 +922,14 @@ public class OrderService : IOrderService
             await _context.SaveChangesAsync();
 
             // 6. Tạo Payment
+            // Map vnpay to bank_transfer for database ENUM
+            var dbPaymentMethod = paymentMethod?.ToLower() == "vnpay" ? "bank_transfer" : paymentMethod;
+            
             var payment = new Payment
             {
                 OrderId       = order.OrderId,
                 Amount        = finalTotal,
-                PaymentMethod = paymentMethod,
+                PaymentMethod = dbPaymentMethod,
                 PaymentDate   = DateTime.Now
             };
             _context.Payments.Add(payment);
@@ -896,20 +950,11 @@ public class OrderService : IOrderService
                 Email          = order.Email
             };
 
-            // Chỉ e-wallet mới tự động chuyển sang paid ngay
-            // Cash sẽ giữ trạng thái pending/unpaid cho đến khi xác nhận
+            // Cash & VNPay: giữ trạng thái pending/unpaid
+            // VNPay sẽ được cập nhật qua callback
             var method = (paymentMethod ?? "").ToLower();
-            if (method == "e-wallet")
+            if (method == "cash" || method == "vnpay")
             {
-                order.PayStatus = "paid";
-                bill.PayStatus = "paid";
-                bill.PaidAt = DateTime.Now;
-                payment.TransactionStatus = "success";
-                payment.PaymentDate = DateTime.Now;
-            }
-            else if (method == "cash")
-            {
-                // Cash: giữ trạng thái pending/unpaid
                 order.PayStatus = "pending";
                 bill.PayStatus = "unpaid";
                 payment.TransactionStatus = "pending";
